@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Vancouver Tennis Clash Design System
+Tennis-themed colors: white, tennis green, yellow, deep gray
+Modern, premium, competitive feel
+*/
+
+@layer base {
+  :root {
+    /* Core Colors */
+    --background: 0 0% 100%;
+    --foreground: 213 16% 12%;
+
+    /* Tennis Green Theme */
+    --primary: 144 48% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 144 48% 35%;
+
+    /* Tennis Yellow Accent */
+    --accent: 51 100% 55%;
+    --accent-foreground: 213 16% 12%;
+    --accent-muted: 51 75% 65%;
+
+    /* Secondary Colors */
+    --secondary: 144 25% 92%;
+    --secondary-foreground: 213 16% 12%;
+
+    /* Neutral Grays */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Card & UI Elements */
+    --card: 0 0% 100%;
+    --card-foreground: 213 16% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 16% 12%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 144 48% 25%;
+
+    /* Success & Error */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Tennis-specific Design Tokens */
+    --tennis-court: 144 25% 92%;
+    --tennis-net: 213 16% 12%;
+    --trophy-gold: 45 93% 47%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(144 48% 25%), hsl(144 48% 35%));
+    --gradient-accent: linear-gradient(135deg, hsl(51 100% 55%), hsl(51 75% 65%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 96%));
+
+    /* Shadows */
+    --shadow-premium: 0 10px 40px -12px hsl(144 48% 25% / 0.25);
+    --shadow-card: 0 4px 16px -8px hsl(144 48% 25% / 0.15);
+    --shadow-glow: 0 0 30px hsl(51 100% 55% / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+}
+
+@layer components {
+
+  /* Tennis-themed component classes */
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+
+  .accent-gradient {
+    background: var(--gradient-accent);
+  }
+
+  .card-premium {
+    @apply bg-card border border-border rounded-xl shadow-[0_4px_16px_-8px_hsl(144_48%_25%_/_0.15)] hover:shadow-[0_10px_40px_-12px_hsl(144_48%_25%_/_0.25)] transition-all duration-300;
+  }
+
+  .btn-hero {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  .text-gradient {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .tennis-court-bg {
+    background: linear-gradient(135deg, hsl(144 25% 92%), hsl(144 35% 88%));
+  }
+}
