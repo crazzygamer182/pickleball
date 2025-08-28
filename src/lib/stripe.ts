@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 export const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
 // Payment description
-export const PAYMENT_DESCRIPTION = 'Vancouver Tennis Clash - Season Registration Fee';
+export const PAYMENT_DESCRIPTION = 'Vancouver Pickleball Smash - Season Registration Fee';
 
 // Coupon codes
 export const COUPON_CODES = {

@@ -1,8 +1,7 @@
 -- Seed data for Tennis Ladder System
 
--- Insert the three ladders
+-- Insert the two ladders
 INSERT INTO ladders (name, type, fee) VALUES
-  ('Men''s Competitive', 'men_competitive', 10),
-  ('Men''s Casual', 'men_casual', 5),
-  ('Women''s Ladder', 'women', 10)
+  ('Competitive', 'competitive', 10),
+  ('Casual', 'casual', 5)
 ON CONFLICT (id) DO NOTHING;

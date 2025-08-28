@@ -215,7 +215,7 @@ const JoinAdditionalLadder = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gradient">Join Additional Ladder</h1>
-              <p className="text-muted-foreground mt-2">Expand your tennis experience by joining more ladders</p>
+              <p className="text-muted-foreground mt-2">Expand your pickleball experience by joining more ladders</p>
             </div>
           <Button 
               variant="outline"
@@ -233,7 +233,7 @@ const JoinAdditionalLadder = () => {
           <Card className="card-premium mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                <CheckCircle className="h-6 w-6 mr-2 text-green-600" />
+                <CheckCircle className="h-6 w-6 mr-2 text-blue-600" />
                     Your Current Ladders
                   </CardTitle>
                   <CardDescription>
@@ -247,15 +247,15 @@ const JoinAdditionalLadder = () => {
                   if (!ladder) return null;
 
                       return (
-                    <div key={membership.id} className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div key={membership.id} className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                           <div className="flex items-center space-x-3">
-                        <Trophy className="h-5 w-5 text-green-600" />
+                        <Trophy className="h-5 w-5 text-blue-600" />
                             <div>
-                          <p className="font-semibold text-green-800 dark:text-green-200">{ladder.name}</p>
-                          <p className="text-sm text-green-600 dark:text-green-400">Rank #{membership.current_rank}</p>
+                          <p className="font-semibold text-blue-800 dark:text-blue-200">{ladder.name}</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400">Rank #{membership.current_rank}</p>
                             </div>
                           </div>
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                         Member
                           </Badge>
                         </div>
@@ -379,7 +379,7 @@ const JoinAdditionalLadder = () => {
         {currentStep === 'complete' && selectedLadder && (
           <Card className="card-premium">
             <CardHeader>
-              <CardTitle className="flex items-center text-green-600">
+              <CardTitle className="flex items-center text-blue-600">
                 <CheckCircle className="h-6 w-6 mr-2" />
                 Successfully Joined!
               </CardTitle>
@@ -389,8 +389,8 @@ const JoinAdditionalLadder = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-8 w-8 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Welcome to {selectedLadder.name}!</h3>

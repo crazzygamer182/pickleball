@@ -61,10 +61,10 @@ Deno.serve(async (req) => {
       metadata: {
         email,
         name,
-        description: description || 'Vancouver Tennis Clash Registration',
+        description: description || 'Vancouver Pickleball Smash Registration',
         couponCode: couponCode || 'none'
       },
-      description: description || 'Vancouver Tennis Clash Registration Fee',
+      description: description || 'Vancouver Pickleball Smash Registration Fee',
       receipt_email: email,
     })
 

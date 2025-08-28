@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, text, html, from = 'Vancouver Tennis Clash <admin@vancouvertennisclash.com>' } = await req.json()
+    const { to, subject, text, html, from = 'Vancouver Pickleball Smash <admin@vancouvertennisclash.com>' } = await req.json()
 
     // Validate required fields
     if (!to || !subject || (!text && !html)) {

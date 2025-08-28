@@ -1,4 +1,4 @@
--- Tennis Ladder System Schema Migration
+-- Pickleball Ladder System Schema Migration
 
 -- 1. users (linked to Supabase Auth, but extra info here)
 create table if not exists users (

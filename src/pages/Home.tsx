@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import tennisHero from '@/assets/tennis-hero.jpg';
+import pickleballHero from '@/assets/pickleball-hero.jpg';
 
 const Home = () => {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ const Home = () => {
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${tennisHero})` }}
+          style={{ backgroundImage: `url(${pickleballHero})` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
@@ -153,7 +153,7 @@ const Home = () => {
             </p>
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🎾</span>
                 </div>
                 <h4 className="font-semibold mb-2">All Skill Levels Welcome</h4>

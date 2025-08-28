@@ -41,10 +41,6 @@ const Dashboard = () => {
 
   // Get match schedule message based on user's ladder
   const getMatchScheduleMessage = () => {
-    const userMembership = memberships.find(membership => membership.user_id === user?.id);
-    if (userMembership?.ladder.type === 'women') {
-      return 'New matches every Wednesday';
-    }
     return 'New matches every Sunday';
   };
 
@@ -433,7 +429,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gradient">Welcome, {user?.user_metadata?.name || 'Player'}!</h1>
-          <p className="text-muted-foreground mt-2">Your tennis ladder dashboard</p>
+          <p className="text-muted-foreground mt-2">Your pickleball ladder dashboard</p>
         </div>
 
 
@@ -520,8 +516,7 @@ const Dashboard = () => {
                           <div>
                             <p className="font-semibold">{membership.ladder.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {membership.ladder.type === 'competitive' ? 'Competitive' : 
-                               membership.ladder.type === 'women' ? 'Women\'s' : 'Casual'}
+                              {membership.ladder.type === 'competitive' ? 'Competitive' : 'Casual'}
                             </p>
                             {/* Streak */}
                             {membership.winning_streak > 0 && (
@@ -563,16 +558,16 @@ const Dashboard = () => {
               {/* Match Statistics */}
               <div className="lg:col-span-1">
                 <h3 className="font-semibold mb-4 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+                  <TrendingUp className="h-4 w-4 mr-2 text-blue-600" />
                   Match Performance
                 </h3>
                 {matchStats.total > 0 ? (
                   <div className="space-y-4">
                     {/* Win/Loss Counts */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{matchStats.wins}</div>
-                        <div className="text-sm text-green-600 font-medium">Wins</div>
+                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{matchStats.wins}</div>
+                        <div className="text-sm text-blue-600 font-medium">Wins</div>
                       </div>
                       <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                         <div className="text-2xl font-bold text-red-600">{matchStats.losses}</div>
@@ -590,7 +585,7 @@ const Dashboard = () => {
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div 
-                          className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-1000 ease-out"
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out"
                           style={{ width: `${matchStats.winRate}%` }}
                         ></div>
                       </div>
@@ -711,7 +706,7 @@ const Dashboard = () => {
                               {scoreStatus.message}
                             </p>
                             {scoreStatus.status === 'both' && scoreStatus.scoresMatch && (
-                              <p className="text-sm font-medium mt-1 text-green-600 dark:text-green-400">
+                              <p className="text-sm font-medium mt-1 text-blue-600 dark:text-blue-400">
                                 ✅ Score: {scoreStatus.score} | Winner: {scoreStatus.winner}
                               </p>
                             )}
@@ -989,7 +984,7 @@ const Dashboard = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 text-gradient">How It Works</h2>
                           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Join Vancouver's premier tennis ladder system with three divisions designed for players of various skill levels and commitment.
+              Join Vancouver's premier pickleball ladder system with three divisions designed for players of various skill levels and commitment.
             </p>
             </div>
             

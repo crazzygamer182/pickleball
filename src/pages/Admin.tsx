@@ -1223,9 +1223,9 @@ const Admin = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Completed Matches</p>
-                      <p className="text-3xl font-bold text-green-600">{completedMatches.length}</p>
+                      <p className="text-3xl font-bold text-blue-600">{completedMatches.length}</p>
                     </div>
-                    <Trophy className="h-8 w-8 text-green-600" />
+                    <Trophy className="h-8 w-8 text-blue-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -1280,7 +1280,7 @@ const Admin = () => {
                         {selectedFirstPlayer && (
                           <div className="text-xs text-muted-foreground mt-1">
                             {selectedFirstPlayer.preferred_latitude && selectedFirstPlayer.preferred_longitude ? (
-                              <span className="text-green-600 dark:text-green-400">📍 Coordinates available - distances will be shown for Player 2</span>
+                              <span className="text-blue-600 dark:text-blue-400">📍 Coordinates available - distances will be shown for Player 2</span>
                             ) : selectedFirstPlayer.location_text ? (
                               <span className="text-blue-600 dark:text-blue-400">📍 Location set: {selectedFirstPlayer.location_text} - distances won't be available</span>
                             ) : (
@@ -1440,7 +1440,7 @@ const Admin = () => {
                                   
                                   {/* Crown for 1st place */}
                                   {player.rank === 1 && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-tennis-gold rounded-full flex items-center justify-center shadow-lg">
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-pickleball-gold rounded-full flex items-center justify-center shadow-lg">
                                       <Crown className="h-2 w-2 text-white" />
                                     </div>
                                   )}
@@ -1575,7 +1575,7 @@ const Admin = () => {
                              variant="default"
                              onClick={() => completeMatch(match.id)}
                              disabled={completingMatch === match.id}
-                             className="bg-green-600 hover:bg-green-700 text-white"
+                             className="bg-blue-600 hover:bg-blue-700 text-white"
                            >
                              {completingMatch === match.id ? (
                                <Loader2 className="h-4 w-4 animate-spin" />
@@ -1832,7 +1832,7 @@ const Admin = () => {
                           
                           {/* Crown for 1st place */}
                           {rank === 1 && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-tennis-gold rounded-full flex items-center justify-center shadow-lg">
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-pickleball-gold rounded-full flex items-center justify-center shadow-lg">
                               <Crown className="h-2.5 w-2.5 text-white" />
                             </div>
                           )}

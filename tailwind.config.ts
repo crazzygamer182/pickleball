@@ -61,9 +61,9 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				tennis: {
-					court: 'hsl(var(--tennis-court))',
-					net: 'hsl(var(--tennis-net))',
+				pickleball: {
+					court: 'hsl(var(--pickleball-court))',
+					net: 'hsl(var(--pickleball-net))',
 					gold: 'hsl(var(--trophy-gold))'
 				},
 				sidebar: {

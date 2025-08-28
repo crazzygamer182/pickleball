@@ -244,7 +244,7 @@ const Matches = () => {
         )}
 
         {/* Call to Action */}
-        <div className="text-center mt-16 p-8 tennis-court-bg rounded-2xl">
+        <div className="text-center mt-16 p-8 pickleball-court-bg rounded-2xl">
           <h3 className="text-2xl font-bold mb-4">Ready to Play?</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Join a ladder and get matched with players at your level every week

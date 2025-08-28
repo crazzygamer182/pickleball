@@ -15,7 +15,6 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
 import MarketPayment from "./pages/MarketPayment";
-import WomensLadder from "./pages/WomensLadder";
 import JoinAdditionalLadder from "./pages/JoinAdditionalLadder";
 import NotFound from "./pages/NotFound";
 
@@ -39,7 +38,6 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/rules" element={<Rules />} />
             <Route path="/market-payment" element={<MarketPayment />} />
-            <Route path="/womens-ladder" element={<WomensLadder />} />
             <Route path="/join-additional" element={<ProtectedRoute><JoinAdditionalLadder /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

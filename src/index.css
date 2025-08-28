@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Vancouver Tennis Clash Design System
-Tennis-themed colors: white, tennis green, yellow, deep gray
+/* Vancouver Pickleball Smash Design System
+Pickleball-themed colors: white, soft blue, yellow accent, deep gray
 Modern, premium, competitive feel
 */
 
@@ -13,19 +13,19 @@ Modern, premium, competitive feel
     --background: 0 0% 100%;
     --foreground: 213 16% 12%;
 
-    /* Tennis Green Theme */
-    --primary: 144 48% 25%;
+    /* Pickleball Blue Theme */
+    --primary: 218 82% 56%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 144 48% 35%;
+    --primary-glow: 218 82% 66%;
 
-    /* Tennis Yellow Accent */
+    /* Pickleball Yellow Accent */
     --accent: 51 100% 55%;
     --accent-foreground: 213 16% 12%;
     --accent-muted: 51 75% 65%;
 
     /* Secondary Colors */
-    --secondary: 144 25% 92%;
-    --secondary-foreground: 213 16% 12%;
+    --secondary: 218 30% 92%;
+    --secondary-foreground: 218 16% 12%;
 
     /* Neutral Grays */
     --muted: 220 14% 96%;
@@ -40,28 +40,28 @@ Modern, premium, competitive feel
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 144 48% 25%;
+    --ring: 218 82% 56%;
 
     /* Success & Error */
-    --success: 142 76% 36%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Tennis-specific Design Tokens */
-    --tennis-court: 144 25% 92%;
-    --tennis-net: 213 16% 12%;
+    /* Pickleball-specific Design Tokens */
+    --pickleball-court: 218 30% 92%;
+    --pickleball-net: 218 16% 12%;
     --trophy-gold: 45 93% 47%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(144 48% 25%), hsl(144 48% 35%));
+    --gradient-hero: linear-gradient(135deg, hsl(218 82% 56%), hsl(218 82% 66%));
     --gradient-accent: linear-gradient(135deg, hsl(51 100% 55%), hsl(51 75% 65%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 96%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(218 14% 96%));
 
     /* Shadows */
-    --shadow-premium: 0 10px 40px -12px hsl(144 48% 25% / 0.25);
-    --shadow-card: 0 4px 16px -8px hsl(144 48% 25% / 0.15);
+    --shadow-premium: 0 10px 40px -12px hsl(218 82% 56% / 0.25);
+    --shadow-card: 0 4px 16px -8px hsl(218 82% 56% / 0.15);
     --shadow-glow: 0 0 30px hsl(51 100% 55% / 0.3);
 
     /* Animations */
@@ -138,7 +138,7 @@ Modern, premium, competitive feel
 
 @layer components {
 
-  /* Tennis-themed component classes */
+  /* Pickleball-themed component classes */
   .hero-gradient {
     background: var(--gradient-hero);
   }
@@ -166,7 +166,7 @@ Modern, premium, competitive feel
     background-clip: text;
   }
 
-  .tennis-court-bg {
-    background: linear-gradient(135deg, hsl(144 25% 92%), hsl(144 35% 88%));
+  .pickleball-court-bg {
+    background: linear-gradient(135deg, hsl(218 30% 92%), hsl(218 35% 88%));
   }
 }

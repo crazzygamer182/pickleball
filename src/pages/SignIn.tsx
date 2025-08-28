@@ -72,7 +72,7 @@ const SignIn = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Sign In</CardTitle>
             <CardDescription>
-              Welcome back to Vancouver Tennis Clash
+              Welcome back to Vancouver Pickleball Smash
             </CardDescription>
           </CardHeader>
           <CardContent>

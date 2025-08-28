@@ -241,7 +241,7 @@ const Join = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">Join the Ladder</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Ready to compete? Join Vancouver's most active tennis community and start climbing the rankings
+            Ready to compete? Join Vancouver's most active pickleball community and start climbing the rankings
           </p>
         </div>
 
@@ -328,8 +328,6 @@ const Join = () => {
                                 <div className="flex items-center space-x-2">
                                   {ladder.type === 'competitive' ? (
                                     <Trophy className="h-5 w-5 text-primary" />
-                                  ) : ladder.type === 'women' ? (
-                                    <User className="h-5 w-5 text-pink-600 dark:text-pink-400" />
                                   ) : ladder.type === 'casual' ? (
                                     <Users className="h-5 w-5 text-accent-foreground" />
                                   ) : (
@@ -342,8 +340,6 @@ const Join = () => {
                               <p className="text-sm text-muted-foreground mt-1">
                                 {ladder.type === 'competitive' 
                                   ? 'For experienced players (3.0-3.5 skill level) seeking competitive matches'
-                                  : ladder.type === 'women'
-                                  ? 'Dedicated women\'s ladder for players (2.0-3.5 skill level), fostering a supportive and competitive environment'
                                   : ladder.type === 'casual'
                                   ? 'For beginners and recreational players (2.0-2.5 skill level) focused on fun, learning, and flexible scheduling'
                                   : 'Ladder description not available'
@@ -455,7 +451,7 @@ const Join = () => {
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                    <span>Active community of tennis enthusiasts</span>
+                    <span>Active community of pickleball enthusiasts</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
@@ -480,17 +476,13 @@ const Join = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                                         <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">Casual Ladder (2.0-2.5)</h4>
-                    <p className="text-xs text-green-700 dark:text-green-300">Perfect for beginners and recreational players</p>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                         <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Casual Ladder (2.0-2.5)</h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">Perfect for beginners and recreational players</p>
                   </div>
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Competitive Ladder (3.0-3.5)</h4>
                     <p className="text-xs text-blue-700 dark:text-blue-300">For experienced players seeking competitive matches</p>
-                  </div>
-                  <div className="p-3 bg-pink-50 dark:bg-pink-950/20 rounded-lg border border-pink-200 dark:border-pink-800">
-                    <h4 className="font-semibold text-pink-900 dark:text-pink-100 mb-1">Women's Ladder (2.0-3.5)</h4>
-                    <p className="text-xs text-pink-700 dark:text-pink-300">Dedicated women's division for 2.0-3.5 skill level</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Not sure about your skill level? Start with casual - you can always move up!
@@ -507,7 +499,7 @@ const Join = () => {
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   <li>• Must be 16+ years old</li>
-                  <li>• Own tennis equipment (racket, appropriate shoes)</li>
+                  <li>• Own pickleball equipment (paddle, appropriate shoes)</li>
                   <li>• Committed to weekly match participation</li>
                   <li>• Respectful and sportsmanlike conduct</li>
                 </ul>
@@ -515,7 +507,7 @@ const Join = () => {
             </Card>
 
             {/* Contact Info */}
-            <Card className="card-premium tennis-court-bg">
+            <Card className="card-premium pickleball-court-bg">
               <CardContent className="pt-6">
                 <h3 className="font-semibold mb-2">Questions?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
