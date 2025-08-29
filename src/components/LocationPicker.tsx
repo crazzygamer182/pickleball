@@ -126,7 +126,7 @@ const LocationPicker = ({
 
         {/* Option 2: General Location */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Option 2: Choose General Location</Label>
+          <Label className="text-sm font-medium">Option 2: Choose General Location (or enter multiple locations)</Label>
           <div className="flex space-x-2">
             <Input
               type="text"

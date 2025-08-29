@@ -35,6 +35,11 @@ const Join = () => {
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const { toast } = useToast();
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch available ladders
   useEffect(() => {
     const fetchLadders = async () => {
