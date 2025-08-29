@@ -1052,7 +1052,7 @@ const Dashboard = () => {
                     <Calendar className="h-16 w-16 text-primary mx-auto mb-4" />
                     <h4 className="text-xl font-semibold mb-2">Season Timeline</h4>
                     <p className="text-muted-foreground mb-4">
-                      Current season ends <span className="font-semibold text-primary">September 20th, 2025</span>
+                      Current season starts <span className="font-semibold text-primary">September 1st</span> and ends <span className="font-semibold text-primary">October 1st, 2025</span>
                     </p>
                     <Badge className="bg-accent/10 text-accent-foreground">
                       Events & Prizes Coming Soon

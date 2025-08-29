@@ -463,7 +463,7 @@ const Join = () => {
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                    <span>Current season ends September 20th, 2025</span>
+                    <span>Current season starts September 1st and ends October 1st, 2025</span>
                   </li>
                 </ul>
               </CardContent>
