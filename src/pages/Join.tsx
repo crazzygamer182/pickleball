@@ -344,7 +344,7 @@ const Join = () => {
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
                                 {ladder.type === 'competitive' 
-                                  ? 'For experienced players (3.0-3.5 skill level) seeking competitive matches'
+                                  ? 'For experienced players (3.0-4.0 skill level) seeking competitive matches'
                                   : ladder.type === 'casual'
                                   ? 'For beginners and recreational players (2.0-2.5 skill level) focused on fun, learning, and flexible scheduling'
                                   : 'Ladder description not available'
@@ -486,7 +486,7 @@ const Join = () => {
                     <p className="text-xs text-blue-700 dark:text-blue-300">Perfect for beginners and recreational players</p>
                   </div>
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Competitive Ladder (3.0-3.5)</h4>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Competitive Ladder (3.0-4.0)</h4>
                     <p className="text-xs text-blue-700 dark:text-blue-300">For experienced players seeking competitive matches</p>
                   </div>
                   <p className="text-xs text-muted-foreground">

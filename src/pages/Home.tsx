@@ -75,11 +75,11 @@ const Home = () => {
                   <Trophy className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Competitive</CardTitle>
-                <Badge className="bg-primary/10 text-primary w-fit mx-auto">3.0-3.5 Skill Level</Badge>
+                <Badge className="bg-primary/10 text-primary w-fit mx-auto">3.0-4.0 Skill Level</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  For experienced players (3.0-3.5 skill level) seeking competitive matches.
+                  For experienced players (3.0-4.0 skill level) seeking competitive matches.
                 </CardDescription>
               </CardContent>
             </Card>

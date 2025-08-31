@@ -195,7 +195,7 @@ const Ladders = () => {
                       <h4 className="font-semibold text-lg">Competitive Ladder</h4>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      For experienced players (3.0-3.5 skill level) seeking competitive matches and serious play.
+                      For experienced players (3.0-4.0 skill level) seeking competitive matches and serious play.
                     </p>
                     <Badge className="bg-primary/20 text-primary">$10 registration</Badge>
                   </div>

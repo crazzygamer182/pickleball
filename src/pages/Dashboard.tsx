@@ -999,7 +999,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base">
-                    For experienced players (3.0-3.5 skill level) seeking competitive matches.
+                    For experienced players (3.0-4.0 skill level) seeking competitive matches.
                   </CardDescription>
                 </CardContent>
               </Card>
