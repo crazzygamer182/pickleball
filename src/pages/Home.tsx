@@ -63,41 +63,27 @@ const Home = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-gradient">How It Works</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Join Vancouver's premier pickleball ladder system with two divisions designed for players of various skill levels and commitment.
+              Join Vancouver's premier pickleball ladder system designed for players of all skill levels.
             </p>
           </div>
           
-          {/* Two Ladders Overview */}
-          <div className="grid md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
+          {/* Ladder Overview */}
+          <div className="flex justify-center mb-16 max-w-4xl mx-auto">
             <Card className="card-premium text-center">
               <CardHeader>
                 <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center">
                   <Trophy className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Competitive</CardTitle>
-                <Badge className="bg-primary/10 text-primary w-fit mx-auto">3.0-4.0 Skill Level</Badge>
+                <CardTitle className="text-xl">Pickleball Ladder</CardTitle>
+                <Badge className="bg-primary/10 text-primary w-fit mx-auto">2.5-4.0 Skill Level</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  For experienced players (3.0-4.0 skill level) seeking competitive matches.
+                  For players of all levels (2.5-4.0 skill level) looking to improve their game.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="card-premium text-center">
-              <CardHeader>
-                <div className="mx-auto mb-4 p-4 bg-accent/10 rounded-full w-16 h-16 flex items-center justify-center">
-                  <Users className="h-8 w-8 text-accent" />
-                </div>
-                <CardTitle className="text-xl">Casual</CardTitle>
-                                    <Badge className="bg-accent/10 text-accent w-fit mx-auto">2.0-2.5 Skill Level</Badge>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">
-                  For beginners and recreational players (2.0-2.5 skill level) focused on fun, learning, and flexible scheduling. Perfect for new players!
-                </CardDescription>
-              </CardContent>
-            </Card>
 
           </div>
 
@@ -146,10 +132,10 @@ const Home = () => {
 
           {/* Beginner Friendly Section */}
           <div className="text-center mb-16">
-            <h3 className="text-2xl font-bold mb-4">Beginner Friendly</h3>
+            <h3 className="text-2xl font-bold mb-4">All Skill Levels Welcome</h3>
             <p className="text-lg text-muted-foreground mb-6 max-w-3xl mx-auto">
-              New to pickleball? No problem! Our casual ladder is perfect for players with 2.0-2.5 skill level. 
-              We welcome players of all abilities and provide a supportive environment to improve your game.
+              New to pickleball? No problem! Our ladder welcomes players from 2.5-4.0 skill level. 
+              We provide a supportive environment for all players to improve their game and enjoy competitive matches.
             </p>
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="text-center">

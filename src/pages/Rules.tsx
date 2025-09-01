@@ -102,7 +102,7 @@ const Rules = () => {
                 <p><strong>Serving:</strong> Each player serves 2 consecutive points, then switch</p>
                 <p><strong>Side Changes:</strong> Switch sides at the end of each game</p>
                 <p><strong>Third Game:</strong> If needed, switch sides when first player reaches 6 points</p>
-                <p><strong>Note:</strong> This format applies to all ladders (casual and competitive)</p>
+                <p><strong>Note:</strong> This format applies to our pickleball ladder</p>
               </div>
             </div>
 

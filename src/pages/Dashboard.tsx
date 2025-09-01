@@ -516,7 +516,7 @@ const Dashboard = () => {
                           <div>
                             <p className="font-semibold">{membership.ladder.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {membership.ladder.type === 'competitive' ? 'Competitive' : 'Casual'}
+                              Pickleball Ladder
                             </p>
                             {/* Streak */}
                             {membership.winning_streak > 0 && (
@@ -984,39 +984,26 @@ const Dashboard = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 text-gradient">How It Works</h2>
                           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Join Vancouver's premier pickleball ladder system with three divisions designed for players of various skill levels and commitment.
+              Join Vancouver's premier pickleball ladder system designed for players of all skill levels.
             </p>
             </div>
             
-            {/* Two Ladders Overview */}
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* Ladder Overview */}
+            <div className="flex justify-center mb-16">
               <Card className="card-premium text-center">
                 <CardHeader>
                   <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center">
                     <Trophy className="h-8 w-8 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">Competitive</CardTitle>
+                  <CardTitle className="text-xl">Pickleball Ladder</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-base">
-                    For experienced players (3.0-4.0 skill level) seeking competitive matches.
+                    For players of all levels (2.5-4.0 skill level) looking to improve their game.
                   </CardDescription>
                 </CardContent>
               </Card>
 
-              <Card className="card-premium text-center">
-                <CardHeader>
-                  <div className="mx-auto mb-4 p-4 bg-accent/10 rounded-full w-16 h-16 flex items-center justify-center">
-                    <Users className="h-8 w-8 text-accent" />
-                  </div>
-                  <CardTitle className="text-xl">Casual</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    For beginners and recreational players (2.0-2.5 skill level) focused on fun, learning, and flexible scheduling.
-                  </CardDescription>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Weekly Match System */}

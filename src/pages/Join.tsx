@@ -21,7 +21,7 @@ const Join = () => {
     email: '',
     password: '',
     phone: '',
-    ladder: 'casual'
+    ladder: 'competitive'
   });
   const [locationData, setLocationData] = useState({
     latitude: undefined as number | undefined,
@@ -331,24 +331,13 @@ const Join = () => {
                             <Label htmlFor={ladder.id} className="cursor-pointer">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
-                                  {ladder.type === 'competitive' ? (
-                                    <Trophy className="h-5 w-5 text-primary" />
-                                  ) : ladder.type === 'casual' ? (
-                                    <Users className="h-5 w-5 text-accent-foreground" />
-                                  ) : (
-                                    <Users className="h-5 w-5 text-muted-foreground" />
-                                  )}
+                                  <Trophy className="h-5 w-5 text-primary" />
                                   <span className="font-semibold">{ladder.name}</span>
                                 </div>
                                 <span className="text-sm font-medium text-primary">${ladder.fee}</span>
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {ladder.type === 'competitive' 
-                                  ? 'For experienced players (3.0-4.0 skill level) seeking competitive matches'
-                                  : ladder.type === 'casual'
-                                  ? 'For beginners and recreational players (2.0-2.5 skill level) focused on fun, learning, and flexible scheduling'
-                                  : 'Ladder description not available'
-                                }
+                                For players of all levels (2.5-4.0 skill level) looking to improve their game
                               </p>
                             </Label>
                           </div>
@@ -482,15 +471,11 @@ const Join = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                         <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Casual Ladder (2.0-2.5)</h4>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">Perfect for beginners and recreational players</p>
-                  </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Competitive Ladder (3.0-4.0)</h4>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">For experienced players seeking competitive matches</p>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Pickleball Ladder (2.5-4.0)</h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">For players of all skill levels looking to improve</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Not sure about your skill level? Start with casual - you can always move up!
+                    Join our inclusive ladder system designed for continuous improvement!
                   </p>
                 </div>
               </CardContent>

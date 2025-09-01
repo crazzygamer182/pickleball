@@ -29,6 +29,7 @@ export interface Ladder {
   id: string
   name: string
   type: 'competitive' | 'casual' | 'women'
+  sport: string
   fee: number
   created_at: string
 }

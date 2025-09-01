@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Mail, BookOpen } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Loader2, Flame, ArrowUp, ArrowDown, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase, type Ladder, type LadderMembership, type User as UserType } from '@/lib/supabase';
 
 const Ladders = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+  const [ladderMemberships, setLadderMemberships] = useState<Array<LadderMembership & { user: UserType; ladder: Ladder }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fake player names to fill out the ladder
+  const fakePlayerNames = [
+    'Alex Johnson', 'Sarah Chen', 'Mike Rodriguez', 'Emily Davis', 'Chris Thompson',
+    'Jessica Wilson', 'David Lee', 'Amanda Taylor', 'Ryan Brown', 'Nicole Garcia',
+    'Kevin Martinez', 'Lisa Anderson', 'Jason White', 'Rachel Kim', 'Tyler Johnson',
+    'Megan Clark', 'Brandon Hall', 'Stephanie Moore', 'Jordan Smith', 'Ashley Wong'
+  ];
 
   // Redirect to sign in if not authenticated (only after auth loading is complete)
   useEffect(() => {
@@ -23,31 +27,56 @@ const Ladders = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Countdown timer to September 1st, 2025
+  // Fetch competitive ladder data
   useEffect(() => {
-    const targetDate = new Date('2025-09-01T00:00:00').getTime();
-    
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-      
-      if (distance > 0) {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    const fetchLadderData = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
         
-        setTimeLeft({ days, hours, minutes, seconds });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // First get the pickleball ladder ID (competitive type in database)
+        const { data: pickleballLadder, error: ladderError } = await supabase
+          .from('ladders')
+          .select('id')
+          .eq('type', 'competitive')
+          .eq('sport', 'pickleball')
+          .single();
+
+        if (ladderError || !pickleballLadder) {
+          console.error('Error fetching pickleball ladder:', ladderError);
+          return;
+        }
+
+        // Then fetch memberships for that specific ladder
+        const { data: memberships, error } = await supabase
+          .from('ladder_memberships')
+          .select(`
+            *,
+            user:users(*),
+            ladder:ladders(*)
+          `)
+          .eq('is_active', true)
+          .eq('ladder_id', pickleballLadder.id)
+          .order('current_rank', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching ladder data:', error);
+          return;
+        }
+
+        setLadderMemberships(memberships || []);
+      } catch (error) {
+        console.error('Error fetching ladder data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (user) {
+      fetchLadderData();
+    }
+  }, [user]);
 
   // Show loading spinner while auth is loading or user is being redirected
   if (authLoading || (!user && !authLoading)) {
@@ -58,213 +87,190 @@ const Ladders = () => {
     );
   }
 
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="h-6 w-6 text-yellow-500" />;
+    if (rank <= 3) return <Trophy className="h-6 w-6 text-amber-500" />;
+    return null;
+  };
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUp className="h-4 w-4 text-green-500" />;
+      case 'down':
+        return <TrendingDown className="h-4 w-4 text-red-500" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  // Generate fake players to fill out the ladder
+  const generateFakePlayers = (startRank: number, count: number) => {
+    return Array.from({ length: count }, (_, index) => ({
+      id: `fake-${startRank + index}`,
+      user_id: `fake-user-${startRank + index}`,
+      ladder_id: 'fake-ladder',
+      join_date: new Date().toISOString(),
+      current_rank: startRank + index,
+      is_active: true,
+      winning_streak: 0,
+      trend: 'none' as const,
+      user: {
+        id: `fake-user-${startRank + index}`,
+        name: fakePlayerNames[(startRank + index - 1) % fakePlayerNames.length],
+        email: `fake${startRank + index}@example.com`,
+        created_at: new Date().toISOString(),
+      },
+      ladder: {
+        id: 'fake-ladder',
+        name: 'Pickleball Ladder',
+        type: 'competitive' as const,
+        sport: 'pickleball',
+        fee: 10,
+        created_at: new Date().toISOString(),
+      }
+    }));
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Coming Soon Header */}
-        <div className="text-center mb-12">
-          <Badge className="mb-6 bg-primary/10 text-primary font-semibold px-4 py-2 text-lg">
-            Season Starting Soon
-          </Badge>
-          <h1 className="text-5xl font-bold text-gradient mb-6">
-            Ladders Coming Soon!
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gradient mb-4">
+            🏆 Ladder Rankings
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Get ready for an exciting new season of Vancouver Pickleball Smash!
-            Our competitive and casual ladders will launch on September 1st, 2025.
+          <p className="text-lg text-muted-foreground">
+            Current ladder rankings (2.5-4.0 skill level)
           </p>
         </div>
 
-        {/* Countdown Timer */}
-        <Card className="card-premium mb-8">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center text-2xl">
-              <Clock className="h-6 w-6 mr-2 text-primary" />
-              Season Starts In
+        {/* Ladder Rankings */}
+        <Card className="card-premium">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <Trophy className="h-6 w-6 mr-2 text-primary" />
+                Current Rankings
+              </span>
+              <Badge className="bg-primary/10 text-primary">
+                {ladderMemberships.length + 10} Players
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-primary/10 rounded-lg p-4">
-                <div className="text-3xl font-bold text-primary">{timeLeft.days}</div>
-                <div className="text-sm text-muted-foreground font-medium">Days</div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading ladder...</span>
               </div>
-              <div className="bg-primary/10 rounded-lg p-4">
-                <div className="text-3xl font-bold text-primary">{timeLeft.hours}</div>
-                <div className="text-sm text-muted-foreground font-medium">Hours</div>
+            ) : (
+              <div className="space-y-2">
+                {/* Real players */}
+                {ladderMemberships.map((membership, index) => {
+                  const isCurrentUser = membership.user_id === user?.id;
+                  return (
+                    <div
+                      key={membership.id}
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                        isCurrentUser
+                          ? 'bg-primary/5 border-primary/20'
+                          : 'bg-muted/30 border-border hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 min-w-[60px]">
+                          <span className="text-2xl font-bold text-muted-foreground">
+                            #{membership.current_rank || index + 1}
+                          </span>
+                          {getRankIcon(membership.current_rank || index + 1)}
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            {membership.user.profile_picture_url ? (
+                              <img
+                                src={membership.user.profile_picture_url}
+                                alt={membership.user.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="h-5 w-5 text-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">
+                              {membership.user.name}
+                              {isCurrentUser && (
+                                <Badge className="ml-2 bg-primary/20 text-primary">You</Badge>
+                              )}
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4">
+                        {membership.winning_streak > 0 && (
+                          <div className="flex items-center space-x-1">
+                            <Flame className="h-4 w-4 text-orange-500" />
+                            <span className="text-sm font-medium text-orange-600">
+                              {membership.winning_streak} win streak
+                            </span>
+                          </div>
+                        )}
+                        
+                        {membership.trend !== 'none' && (
+                          <div className="flex items-center space-x-1">
+                            {getTrendIcon(membership.trend)}
+                            <span className="text-sm text-muted-foreground capitalize">
+                              {membership.trend}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Fake players */}
+                {generateFakePlayers(ladderMemberships.length + 1, 10).map((fakePlayer, index) => (
+                  <div
+                    key={fakePlayer.id}
+                    className="flex items-center justify-between p-4 rounded-lg border transition-colors bg-muted/30 border-border hover:bg-muted/50"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2 min-w-[60px]">
+                        <span className="text-2xl font-bold text-muted-foreground">
+                          #{fakePlayer.current_rank}
+                        </span>
+                        {getRankIcon(fakePlayer.current_rank)}
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">
+                            {fakePlayer.user.name}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      {/* Fake players look identical to real ones */}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="bg-primary/10 rounded-lg p-4">
-                <div className="text-3xl font-bold text-primary">{timeLeft.minutes}</div>
-                <div className="text-sm text-muted-foreground font-medium">Minutes</div>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-4">
-                <div className="text-3xl font-bold text-primary">{timeLeft.seconds}</div>
-                <div className="text-sm text-muted-foreground font-medium">Seconds</div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Season Info */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className="card-premium">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-6 w-6 mr-2 text-primary" />
-                Season Start Date
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">September 1st</div>
-                <div className="text-lg text-muted-foreground mb-4">2025</div>
-                <p className="text-sm text-muted-foreground">
-                  Mark your calendars! The new season kicks off with fresh rankings and exciting matches.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-premium">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Mail className="h-6 w-6 mr-2 text-primary" />
-                Stay Updated
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-2xl font-semibold mb-4">You'll receive an email</div>
-                <p className="text-muted-foreground mb-4">
-                  All registered players will be notified via email when matches begin and the ladders are live.
-                </p>
-                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                  No action needed
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* How It Works */}
-        <Card className="card-premium">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl">How It Works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {/* Process Steps */}
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📧</span>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Weekly Assignments</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Every week, you'll receive 1-2 match assignments via email with your opponent's contact details.
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📱</span>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Self-Organize</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Contact your opponent directly to schedule your match at a time and location that works for both of you.
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📊</span>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Report Results</h3>
-                  <p className="text-sm text-muted-foreground">
-                    After your match, submit the score through your dashboard to update the ladder rankings.
-                  </p>
-                </div>
-              </div>
-
-              {/* Ladder Types */}
-              <div className="border-t pt-8">
-                <h3 className="text-xl font-semibold text-center mb-6">Two Ladder Options</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-primary/5 rounded-lg p-6">
-                    <div className="flex items-center mb-3">
-                      <span className="text-2xl mr-3">🏆</span>
-                      <h4 className="font-semibold text-lg">Competitive Ladder</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      For experienced players (3.0-4.0 skill level) seeking competitive matches and serious play.
-                    </p>
-                    <Badge className="bg-primary/20 text-primary">$10 registration</Badge>
-                  </div>
-                  <div className="bg-accent/5 rounded-lg p-6">
-                    <div className="flex items-center mb-3">
-                      <span className="text-2xl mr-3">🤝</span>
-                      <h4 className="font-semibold text-lg">Casual Ladder</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      For beginners and recreational players (2.0-2.5 skill level) focused on fun and improvement.
-                    </p>
-                    <Badge className="bg-accent/20 text-accent-foreground">$5 registration</Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Rules Button */}
-              <div className="text-center pt-6 border-t">
-                <Button 
-                  onClick={() => navigate('/rules')}
-                  className="btn-hero"
-                >
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  View Full Rules & Guidelines
-                </Button>
-                <p className="text-sm text-muted-foreground mt-3">
-                  Learn about match formats, scoring, and ladder policies
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );
 };
 
 export default Ladders;
-
-/* 
-TEMPORARILY COMMENTED OUT - ORIGINAL LADDER FUNCTIONALITY
-TODO: Uncomment when season starts
-
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Loader2, Flame, ArrowUp, ArrowDown, Megaphone, User, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { supabase, type Ladder, type LadderMembership, type User, type Announcement, type Match } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-
-const Ladders = () => {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [selectedLadder, setSelectedLadder] = useState<string>('');
-  const [ladders, setLadders] = useState<Ladder[]>([]);
-  const [ladderMemberships, setLadderMemberships] = useState<Array<LadderMembership & { user: User; ladder: Ladder }>>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [playerStatsOpen, setPlayerStatsOpen] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<{ user: User; membership: LadderMembership & { user: User; ladder: Ladder }; stats: { wins: number; losses: number; total: number; winRate: number } } | null>(null);
-
-  // ... rest of original ladder functionality
-  // (keeping all the original code commented for easy restoration)
-};
-
-export default Ladders;
-*/
