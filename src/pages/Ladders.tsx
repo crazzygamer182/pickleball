@@ -154,7 +154,7 @@ const Ladders = () => {
                 Current Doubles Team Rankings
               </span>
               <Badge className="bg-primary/10 text-primary">
-                {ladderMemberships.length + 10} Teams
+                {ladderMemberships.length + 10} Players
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -210,6 +210,13 @@ const Ladders = () => {
                       </div>
 
                       <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <Trophy className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-semibold text-primary">
+                            {membership.score || 100}
+                          </span>
+                        </div>
+
                         {membership.winning_streak > 0 && (
                           <div className="flex items-center space-x-1">
                             <Flame className="h-4 w-4 text-orange-500" />
@@ -259,7 +266,12 @@ const Ladders = () => {
                     </div>
 
                     <div className="flex items-center space-x-4">
-                      {/* Fake players look identical to real ones */}
+                      <div className="flex items-center space-x-1">
+                        <Trophy className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-semibold text-primary">
+                          100
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}

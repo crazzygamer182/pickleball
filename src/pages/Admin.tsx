@@ -255,11 +255,11 @@ const Admin = () => {
         ? [match.team2_player1_id, match.team2_player2_id]
         : [match.team1_player1_id, match.team1_player2_id];
 
-      // Update winning players: increment streak, set trend to 'up'
+      // Update winning players: increment streak, set trend to 'up', add 10 points
       for (const playerId of winningPlayers) {
         const { data: membership } = await supabase
           .from('pickleball_ladder_memberships')
-          .select('winning_streak')
+          .select('winning_streak, score')
           .eq('user_id', playerId)
           .single();
 
@@ -268,19 +268,30 @@ const Admin = () => {
             .from('pickleball_ladder_memberships')
             .update({
               winning_streak: (membership.winning_streak || 0) + 1,
-              trend: 'up'
+              trend: 'up',
+              score: (membership.score || 100) + 10
             })
             .eq('user_id', playerId);
         }
       }
 
-      // Update losing players: reset streak to 0, set trend to 'down'
+      // Update losing players: reset streak to 0, set trend to 'down', subtract 5 points
       for (const playerId of losingPlayers) {
+        const { data: membership } = await supabase
+          .from('pickleball_ladder_memberships')
+          .select('score')
+          .eq('user_id', playerId)
+          .single();
+
+        const currentScore = membership?.score || 100;
+        const newScore = Math.max(0, currentScore - 5); // Don't let score go below 0
+
         await supabase
           .from('pickleball_ladder_memberships')
           .update({
             winning_streak: 0,
-            trend: 'down'
+            trend: 'down',
+            score: newScore
           })
           .eq('user_id', playerId);
       }

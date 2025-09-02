@@ -105,6 +105,7 @@ export interface PickleballLadderMembership {
   is_active: boolean
   winning_streak: number
   trend: 'up' | 'down' | 'none'
+  score: number
   partner?: string[]
 }
 

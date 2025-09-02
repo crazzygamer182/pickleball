@@ -501,15 +501,23 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground">
                               Pickleball Ladder
                             </p>
-                            {/* Streak */}
-                            {membership.winning_streak > 0 && (
-                              <div className="flex items-center space-x-1 mt-1">
-                                <Flame className="h-3 w-3 text-orange-500" />
-                                <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">
-                                  {membership.winning_streak} win streak
+                            {/* Score and Streak */}
+                            <div className="flex items-center space-x-4 mt-1">
+                              <div className="flex items-center space-x-1">
+                                <Trophy className="h-3 w-3 text-primary" />
+                                <span className="text-xs font-semibold text-primary">
+                                  {membership.score || 100} points
                                 </span>
                               </div>
-                            )}
+                              {membership.winning_streak > 0 && (
+                                <div className="flex items-center space-x-1">
+                                  <Flame className="h-3 w-3 text-orange-500" />
+                                  <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">
+                                    {membership.winning_streak} win streak
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <Button 
