@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, type LadderMembership, type Match, type User, type Ladder } from '@/lib/supabase';
+import { supabase, type PickleballLadderMembership, type PickleballMatch, type PickleballMatchWithPlayers, type User, type PickleballLadder, getTeamForUser, getPartnerForUser, getOpposingTeam } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import LocationPicker from '@/components/LocationPicker';
 import { ProfilePictureUpload } from '@/components/ProfilePictureUpload';
@@ -17,13 +17,8 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [memberships, setMemberships] = useState<Array<LadderMembership & { ladder: Ladder }>>([]);
-  const [upcomingMatches, setUpcomingMatches] = useState<Array<Match & { 
-    player1: User; 
-    player2: User; 
-    player1_rank?: number;
-    player2_rank?: number;
-  }>>([]);
+  const [memberships, setMemberships] = useState<Array<PickleballLadderMembership & { ladder: PickleballLadder }>>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<PickleballMatchWithPlayers[]>([]);
   const [scoreEntryOpen, setScoreEntryOpen] = useState<string | null>(null);
   const [scoreData, setScoreData] = useState({ score: '', winner: '' });
   const [submittingScore, setSubmittingScore] = useState(false);
@@ -41,7 +36,7 @@ const Dashboard = () => {
 
   // Get match schedule message based on user's ladder
   const getMatchScheduleMessage = () => {
-    return 'New matches every Sunday';
+    return 'New doubles matches every Sunday';
   };
 
   // Handle temporary location change (for dashboard)
@@ -110,10 +105,10 @@ const Dashboard = () => {
     try {
       // Fetch user's ladder memberships
       const { data: membershipsData, error: membershipsError } = await supabase
-        .from('ladder_memberships')
+        .from('pickleball_ladder_memberships')
         .select(`
           *,
-          ladder:ladders(*)
+          ladder:pickleball_ladders(*)
         `)
         .eq('user_id', user.id)
         .eq('is_active', true);
@@ -136,30 +131,39 @@ const Dashboard = () => {
 
         // Fetch completed matches for win/loss statistics
         const { data: completedMatchesData, error: completedMatchesError } = await supabase
-          .from('matches')
+          .from('pickleball_matches')
           .select(`
             *,
-            player1:users!matches_player1_id_fkey(*),
-            player2:users!matches_player2_id_fkey(*)
+            team1_player1:users!pickleball_matches_team1_player1_id_fkey(*),
+            team1_player2:users!pickleball_matches_team1_player2_id_fkey(*),
+            team2_player1:users!pickleball_matches_team2_player1_id_fkey(*),
+            team2_player2:users!pickleball_matches_team2_player2_id_fkey(*)
           `)
-          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .or(`team1_player1_id.eq.${user.id},team1_player2_id.eq.${user.id},team2_player1_id.eq.${user.id},team2_player2_id.eq.${user.id}`)
           .eq('status', 'completed');
 
         if (completedMatchesError) throw completedMatchesError;
 
-        // Calculate win/loss statistics
+        // Calculate win/loss statistics for doubles matches
         let wins = 0;
         let losses = 0;
         
         (completedMatchesData || []).forEach(match => {
-          const isPlayer1 = match.player1_id === user.id;
-          const playerName = isPlayer1 ? match.player1.name : match.player2.name;
+          // Determine which team the user was on
+          const userTeam = getTeamForUser(match as PickleballMatchWithPlayers, user.id);
           
-          // Check if this player won the match
-          if (match.player1_winner_submitted === playerName || match.player2_winner_submitted === playerName) {
-            wins++;
-          } else {
-            losses++;
+          if (userTeam && match.team1_winner_submitted && match.team2_winner_submitted) {
+            // Both teams have submitted winner - check if they agree
+            if (match.team1_winner_submitted === match.team2_winner_submitted) {
+              // Teams agree on winner
+              const winner = match.team1_winner_submitted;
+              if (winner === userTeam) {
+                wins++;
+              } else {
+                losses++;
+              }
+            }
+            // If teams disagree, don't count this match in statistics yet
           }
         });
 
@@ -170,47 +174,23 @@ const Dashboard = () => {
 
               // Fetch upcoming matches for the user
         const { data: matchesData, error: matchesError } = await supabase
-          .from('matches')
+          .from('pickleball_matches')
           .select(`
             *,
-            player1:users!matches_player1_id_fkey(*),
-            player2:users!matches_player2_id_fkey(*)
+            team1_player1:users!pickleball_matches_team1_player1_id_fkey(*),
+            team1_player2:users!pickleball_matches_team1_player2_id_fkey(*),
+            team2_player1:users!pickleball_matches_team2_player1_id_fkey(*),
+            team2_player2:users!pickleball_matches_team2_player2_id_fkey(*)
           `)
-          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .or(`team1_player1_id.eq.${user.id},team1_player2_id.eq.${user.id},team2_player1_id.eq.${user.id},team2_player2_id.eq.${user.id}`)
           .eq('status', 'scheduled')
           .order('week', { ascending: true });
 
       if (matchesError) throw matchesError;
 
-      // Add player ranks to matches (using first ladder membership for each player)
-      const matchesWithRanks = await Promise.all(
-        (matchesData || []).map(async (match) => {
-          const [player1Rank, player2Rank] = await Promise.all([
-            supabase
-              .from('ladder_memberships')
-              .select('current_rank')
-              .eq('user_id', match.player1_id)
-              .eq('is_active', true)
-              .limit(1)
-              .single(),
-            supabase
-              .from('ladder_memberships')
-              .select('current_rank')
-              .eq('user_id', match.player2_id)
-              .eq('is_active', true)
-              .limit(1)
-              .single()
-          ]);
-
-          return {
-            ...match,
-            player1_rank: player1Rank.data?.current_rank || 0,
-            player2_rank: player2Rank.data?.current_rank || 0
-          };
-        })
-      );
-
-      setUpcomingMatches(matchesWithRanks);
+      // For doubles, we'll just set the matches directly without individual ranks
+      // Individual player ranks are less important in doubles - team dynamics matter more
+      setUpcomingMatches(matchesData || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
@@ -256,23 +236,26 @@ const Dashboard = () => {
       const match = upcomingMatches.find(m => m.id === matchId);
       if (!match) throw new Error('Match not found');
 
-      const isPlayer1 = match.player1_id === user?.id;
-      const updateData = isPlayer1 
+      // Determine which team the user is on
+      const userTeam = getTeamForUser(match, user?.id || '');
+      if (!userTeam) throw new Error('User not found in this match');
+
+      const updateData = userTeam === 'team1' 
         ? {
-            player1_score_string: scoreData.score,
-            player1_winner_submitted: scoreData.winner,
-            player1_score_submitted_by: user?.id,
-            player1_score_submitted_at: new Date().toISOString()
+            team1_score: scoreData.score,
+            team1_winner_submitted: scoreData.winner,
+            team1_score_submitted_by: user?.id,
+            team1_score_submitted_at: new Date().toISOString()
           }
         : {
-            player2_score_string: scoreData.score,
-            player2_winner_submitted: scoreData.winner,
-            player2_score_submitted_by: user?.id,
-            player2_score_submitted_at: new Date().toISOString()
+            team2_score: scoreData.score,
+            team2_winner_submitted: scoreData.winner,
+            team2_score_submitted_by: user?.id,
+            team2_score_submitted_at: new Date().toISOString()
           };
 
       const { error } = await supabase
-        .from('matches')
+        .from('pickleball_matches')
         .update(updateData)
         .eq('id', matchId);
 
@@ -280,7 +263,7 @@ const Dashboard = () => {
 
       toast({
         title: "Score submitted successfully!",
-        description: "Your score has been recorded.",
+        description: "Your team's score has been recorded.",
       });
 
       // Refresh matches data
@@ -306,30 +289,33 @@ const Dashboard = () => {
       const match = upcomingMatches.find(m => m.id === matchId);
       if (!match) throw new Error('Match not found');
 
-      const isPlayer1 = match.player1_id === user?.id;
-      const otherPlayerSubmittedScore = isPlayer1 
-        ? match.player2_score_string 
-        : match.player1_score_string;
-      const otherPlayerSubmittedWinner = isPlayer1 
-        ? match.player2_winner_submitted 
-        : match.player1_winner_submitted;
+      // Determine which team the user is on
+      const userTeam = getTeamForUser(match, user?.id || '');
+      if (!userTeam) throw new Error('User not found in this match');
 
-      const updateData = isPlayer1 
+      const otherTeamSubmittedScore = userTeam === 'team1' 
+        ? match.team2_score 
+        : match.team1_score;
+      const otherTeamSubmittedWinner = userTeam === 'team1' 
+        ? match.team2_winner_submitted 
+        : match.team1_winner_submitted;
+
+      const updateData = userTeam === 'team1' 
         ? {
-            player1_score_string: otherPlayerSubmittedScore,
-            player1_winner_submitted: otherPlayerSubmittedWinner,
-            player1_score_submitted_by: user?.id,
-            player1_score_submitted_at: new Date().toISOString()
+            team1_score: otherTeamSubmittedScore,
+            team1_winner_submitted: otherTeamSubmittedWinner,
+            team1_score_submitted_by: user?.id,
+            team1_score_submitted_at: new Date().toISOString()
           }
         : {
-            player2_score_string: otherPlayerSubmittedScore,
-            player2_winner_submitted: otherPlayerSubmittedWinner,
-            player2_score_submitted_by: user?.id,
-            player2_score_submitted_at: new Date().toISOString()
+            team2_score: otherTeamSubmittedScore,
+            team2_winner_submitted: otherTeamSubmittedWinner,
+            team2_score_submitted_by: user?.id,
+            team2_score_submitted_at: new Date().toISOString()
           };
 
       const { error } = await supabase
-        .from('matches')
+        .from('pickleball_matches')
         .update(updateData)
         .eq('id', matchId);
 
@@ -337,7 +323,7 @@ const Dashboard = () => {
 
       toast({
         title: "Score confirmed!",
-        description: "You have confirmed the score submitted by your opponent.",
+        description: "You have confirmed the score submitted by the opposing team.",
       });
 
       // Refresh matches data
@@ -354,60 +340,57 @@ const Dashboard = () => {
     }
   };
 
-  const getScoreSubmissionStatus = (match: Match & { player1: User; player2: User; player1_rank?: number; player2_rank?: number }) => {
-    const hasPlayer1Score = match.player1_score_submitted_by;
-    const hasPlayer2Score = match.player2_score_submitted_by;
+  const getScoreSubmissionStatus = (match: PickleballMatchWithPlayers) => {
+    const hasTeam1Score = match.team1_score_submitted_by;
+    const hasTeam2Score = match.team2_score_submitted_by;
     
-    if (!hasPlayer1Score && !hasPlayer2Score) {
+    if (!hasTeam1Score && !hasTeam2Score) {
       return { status: 'none', message: 'No scores submitted yet' };
-    } else if (hasPlayer1Score && hasPlayer2Score) {
-      // Both players submitted - check if they match
-      const scoresMatch = match.player1_score_string === match.player2_score_string && 
-                         match.player1_winner_submitted === match.player2_winner_submitted;
+    } else if (hasTeam1Score && hasTeam2Score) {
+      // Both teams submitted - check if they match
+      const scoresMatch = match.team1_score === match.team2_score && 
+                         match.team1_winner_submitted === match.team2_winner_submitted;
       
       return { 
         status: 'both', 
-        message: scoresMatch ? 'Both players submitted matching scores' : 'Both players submitted scores (may differ)',
-        score: match.player1_score_string,
-        winner: match.player1_winner_submitted,
+        message: scoresMatch ? 'Both teams submitted matching scores' : 'Both teams submitted scores (may differ)',
+        score: match.team1_score,
+        winner: match.team1_winner_submitted,
         scoresMatch,
-        player1Score: match.player1_score_string,
-        player1Winner: match.player1_winner_submitted,
-        player2Score: match.player2_score_string,
-        player2Winner: match.player2_winner_submitted
+        team1Score: match.team1_score,
+        team1Winner: match.team1_winner_submitted,
+        team2Score: match.team2_score,
+        team2Winner: match.team2_winner_submitted
       };
-    } else if (hasPlayer1Score) {
+    } else if (hasTeam1Score) {
       return { 
-        status: 'player1', 
-        message: `${match.player1.name} submitted: ${match.player1_score_string} (Winner: ${match.player1_winner_submitted})`,
-        score: match.player1_score_string,
-        winner: match.player1_winner_submitted,
-        submittedBy: match.player1.name
+        status: 'team1', 
+        message: `Team 1 submitted: ${match.team1_score} (Winner: ${match.team1_winner_submitted})`,
+        score: match.team1_score,
+        winner: match.team1_winner_submitted,
+        submittedBy: 'Team 1'
       };
     } else {
       return { 
-        status: 'player2', 
-        message: `${match.player2.name} submitted: ${match.player2_score_string} (Winner: ${match.player2_winner_submitted})`,
-        score: match.player2_score_string,
-        winner: match.player2_winner_submitted,
-        submittedBy: match.player2.name
+        status: 'team2', 
+        message: `Team 2 submitted: ${match.team2_score} (Winner: ${match.team2_winner_submitted})`,
+        score: match.team2_score,
+        winner: match.team2_winner_submitted,
+        submittedBy: 'Team 2'
       };
     }
   };
 
-  const getOpponentContactInfo = (match: Match & { player1: User; player2: User; player1_rank?: number; player2_rank?: number }) => {
-    const isPlayer1 = match.player1_id === user?.id;
-    const opponent = isPlayer1 ? match.player2 : match.player1;
-    
-    // If opponent has a phone number, use it; otherwise use email
-    const contactInfo = opponent.phone_number || opponent.email;
-    const contactType = opponent.phone_number ? 'Phone' : 'Email';
-    
-    return {
-      name: opponent.name,
-      contactInfo,
-      contactType
-    };
+  // Helper function to get opposing team contact info for doubles
+  const getOpposingTeamContacts = (match: PickleballMatchWithPlayers) => {
+    const opposingTeam = getOpposingTeam(match, user?.id || '');
+    return opposingTeam.map(player => ({
+      name: player.name,
+      phone: player.phone_number,
+      email: player.email,
+      contactInfo: player.phone_number || player.email,
+      contactType: player.phone_number ? 'Phone' : 'Email'
+    }));
   };
 
   // Don't render anything if auth is still loading or if not authenticated (will redirect)
@@ -644,245 +627,202 @@ const Dashboard = () => {
               <div className="space-y-4">
                 {upcomingMatches.map((match) => {
                   const scoreStatus = getScoreSubmissionStatus(match);
-                  const hasUserSubmitted = (match.player1_id === user?.id && match.player1_score_submitted_by) ||
-                                         (match.player2_id === user?.id && match.player2_score_submitted_by);
+                  const userTeam = getTeamForUser(match, user?.id || '');
+                  const partner = getPartnerForUser(match, user?.id || '');
+                  const opposingTeamContacts = getOpposingTeamContacts(match);
+                  const hasUserTeamSubmitted = (userTeam === 'team1' && match.team1_score_submitted_by) ||
+                                             (userTeam === 'team2' && match.team2_score_submitted_by);
                   
                   return (
-                    <div key={match.id} className="p-4 bg-muted/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">Week {match.week}</Badge>
-                          {getStatusBadge(match.status)}
-                        </div>
-
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="text-center flex-1">
-                          <div className="flex items-center justify-center space-x-2">
-                            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                              #{match.player1_rank}
-                            </span>
-                            <span className={`font-semibold ${match.player1_id === user?.id ? 'text-primary' : ''}`}>
-                              {match.player1.name}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="mx-4 text-muted-foreground font-bold">VS</div>
-                        
-                        <div className="text-center flex-1">
-                          <div className="flex items-center justify-center space-x-2">
-                            <span className={`font-semibold ${match.player2_id === user?.id ? 'text-primary' : ''}`}>
-                              {match.player2.name}
-                            </span>
-                            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                              #{match.player2_rank}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Contact Information */}
-                      <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <div className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                              Contact {getOpponentContactInfo(match).name}
-                            </p>
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
-                              {getOpponentContactInfo(match).contactType}: {getOpponentContactInfo(match).contactInfo}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Score Status */}
-                      <div className="mt-3 p-3 bg-background/50 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm text-muted-foreground">
-                              {scoreStatus.message}
-                            </p>
-                            {scoreStatus.status === 'both' && scoreStatus.scoresMatch && (
-                              <p className="text-sm font-medium mt-1 text-blue-600 dark:text-blue-400">
-                                ✅ Score: {scoreStatus.score} | Winner: {scoreStatus.winner}
-                              </p>
-                            )}
-                            {scoreStatus.status === 'both' && !scoreStatus.scoresMatch && (
-                              <div className="mt-2 space-y-1">
-                                <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                                  ⚠️ Scores differ - Admin review needed
-                                </p>
-                                <div className="text-xs space-y-1">
-                                  <p><strong>{match.player1.name}:</strong> {scoreStatus.player1Score} (Winner: {scoreStatus.player1Winner})</p>
-                                  <p><strong>{match.player2.name}:</strong> {scoreStatus.player2Score} (Winner: {scoreStatus.player2Winner})</p>
-                                </div>
-                              </div>
-                            )}
-                            {(scoreStatus.status === 'player1' || scoreStatus.status === 'player2') && (
-                              <p className="text-sm font-medium mt-1">
-                                Score: {scoreStatus.score} | Winner: {scoreStatus.winner}
-                              </p>
+                    <Card key={match.id} className="card-premium">
+                      <CardContent className="p-6">
+                        {/* Header with Week and Status */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="outline" className="font-semibold">Week {match.week}</Badge>
+                            <div className="h-4 w-px bg-border"></div>
+                            {scoreStatus.status === 'both' && scoreStatus.scoresMatch ? (
+                              <Badge className="bg-success/10 text-success">Match Complete</Badge>
+                            ) : scoreStatus.status === 'both' && !scoreStatus.scoresMatch ? (
+                              <Badge variant="destructive">Score Dispute</Badge>
+                            ) : (scoreStatus.status === 'team1' || scoreStatus.status === 'team2') ? (
+                              <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                Awaiting Confirmation
+                              </Badge>
+                            ) : (
+                              getStatusBadge(match.status)
                             )}
                           </div>
                           
-                          <div className="flex items-center space-x-2">
-                            {!hasUserSubmitted && scoreStatus.status === 'none' && (
-                              <Dialog open={scoreEntryOpen === match.id} onOpenChange={(open) => {
-                                setScoreEntryOpen(open ? match.id : null);
-                                if (!open) setScoreData({ score: '', winner: '' });
-                              }}>
-                                <DialogTrigger asChild>
-                                  <Button size="sm" variant="outline">
-                                    <Edit className="h-4 w-4 mr-1" />
-                                    Enter Score
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Enter Match Score</DialogTitle>
-                                    <DialogDescription>
-                                      Enter the final score for your match against {match.player1_id === user?.id ? match.player2.name : match.player1.name}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="score">Match Score</Label>
-                                      <Input
-                                        id="score"
-                                        type="text"
-                                        placeholder="e.g., 6-4, 7-5, 6-2 or 7-6(5), 6-2 or retired"
-                                        value={scoreData.score}
-                                        onChange={(e) => setScoreData(prev => ({ ...prev, score: e.target.value }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="winner">Winner</Label>
-                                      <select
-                                        id="winner"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={scoreData.winner}
-                                        onChange={(e) => setScoreData(prev => ({ ...prev, winner: e.target.value }))}
-                                      >
-                                        <option value="">Select winner</option>
-                                        <option value={match.player1.name}>{match.player1.name}</option>
-                                        <option value={match.player2.name}>{match.player2.name}</option>
-                                      </select>
-                                    </div>
-                                    <Button 
-                                      onClick={() => handleScoreSubmit(match.id)}
-                                      disabled={submittingScore}
-                                      className="w-full"
-                                    >
-                                      {submittingScore ? (
-                                        <>
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          Submitting...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Check className="mr-2 h-4 w-4" />
-                                          Submit Score
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-
-                            {!hasUserSubmitted && (scoreStatus.status === 'player1' || scoreStatus.status === 'player2') && (
-                              <div className="flex flex-col space-y-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleScoreConfirmation(match.id)}
-                                  disabled={submittingScore}
-                                >
-                                  {submittingScore ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Check className="h-4 w-4 mr-1" />
-                                  )}
-                                  Confirm Score
-                                </Button>
-                                <Dialog open={scoreEntryOpen === match.id} onOpenChange={(open) => {
-                                  setScoreEntryOpen(open ? match.id : null);
-                                  if (!open) setScoreData({ score: '', winner: '' });
-                                }}>
-                                  <DialogTrigger asChild>
-                                    <Button size="sm" variant="outline">
-                                      <Edit className="h-4 w-4 mr-1" />
-                                      Enter Different Score
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Enter Different Score</DialogTitle>
-                                      <DialogDescription>
-                                        Your opponent submitted: {scoreStatus.score} (Winner: {scoreStatus.winner}). 
-                                        If this is incorrect, enter the correct score below.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                      <div className="space-y-2">
-                                        <Label htmlFor="score">Match Score</Label>
-                                        <Input
-                                          id="score"
-                                          type="text"
-                                          placeholder="e.g., 6-4, 7-5, 6-2 or 7-6(5), 6-2 or retired"
-                                          value={scoreData.score}
-                                          onChange={(e) => setScoreData(prev => ({ ...prev, score: e.target.value }))}
-                                        />
-                                      </div>
-                                      <div className="space-y-2">
-                                        <Label htmlFor="winner">Winner</Label>
-                                        <select
-                                          id="winner"
-                                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                          value={scoreData.winner}
-                                          onChange={(e) => setScoreData(prev => ({ ...prev, winner: e.target.value }))}
-                                        >
-                                          <option value="">Select winner</option>
-                                          <option value={match.player1.name}>{match.player1.name}</option>
-                                          <option value={match.player2.name}>{match.player2.name}</option>
-                                        </select>
-                                      </div>
-                                      <Button 
-                                        onClick={() => handleScoreSubmit(match.id)}
-                                        disabled={submittingScore}
-                                        className="w-full"
-                                      >
-                                        {submittingScore ? (
-                                          <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Submitting...
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Check className="mr-2 h-4 w-4" />
-                                            Submit Different Score
-                                          </>
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
+                          {/* Score Display */}
+                          {(scoreStatus.status === 'both' && scoreStatus.scoresMatch) && (
+                            <div className="text-right">
+                              <div className="text-xl font-bold text-primary">{scoreStatus.score}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {scoreStatus.winner === 'team1' ? 'Your Team Won' : 'Opponents Won'}
                               </div>
-                            )}
-                            
-                            {hasUserSubmitted && (
-                              <Badge className="bg-success/10 text-success">
-                                <Check className="h-4 w-4 mr-1" />
-                                Score Submitted
-                              </Badge>
-                            )}
+                            </div>
+                          )}
+                          {(scoreStatus.status === 'team1' || scoreStatus.status === 'team2') && (
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">{scoreStatus.score}</div>
+                              <div className="text-xs text-orange-600">Needs confirmation</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Teams Display */}
+                        <div className="grid grid-cols-3 gap-6 mb-6">
+                          {/* Your Team */}
+                          <div className="text-center">
+                            <h4 className="text-sm font-semibold text-primary mb-3">Your Team</h4>
+                            <div className="space-y-2">
+                              <div className="font-medium">{userData?.name}</div>
+                              <div className="text-muted-foreground">{partner?.name}</div>
+                            </div>
+                          </div>
+                          
+                          {/* VS Divider */}
+                          <div className="flex items-center justify-center">
+                            <div className="text-center">
+                              <Badge variant="outline" className="text-lg font-bold px-4 py-2">VS</Badge>
+                            </div>
+                          </div>
+                          
+                          {/* Opposing Team */}
+                          <div className="text-center">
+                            <h4 className="text-sm font-semibold text-muted-foreground mb-3">Opponents</h4>
+                            <div className="space-y-2">
+                              {opposingTeamContacts.map((player, index) => (
+                                <div key={index} className="text-muted-foreground">{player.name}</div>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+
+                        {/* Contact Information */}
+                        <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center mb-3">
+                            <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+                            <h5 className="font-semibold text-blue-900 dark:text-blue-100">Contact Information</h5>
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                            {/* Partner Contact */}
+                            {partner && (
+                              <div>
+                                <div className="font-medium text-blue-900 dark:text-blue-100">{partner.name} (Partner)</div>
+                                <div className="text-blue-700 dark:text-blue-300">
+                                  {partner.phone_number ? `📱 ${partner.phone_number}` : `✉️ ${partner.email}`}
+                                </div>
+                              </div>
+                            )}
+                            {/* Opposing Team Contacts */}
+                            {opposingTeamContacts.map((player, index) => (
+                              <div key={index}>
+                                <div className="font-medium text-blue-900 dark:text-blue-100">{player.name}</div>
+                                <div className="text-blue-700 dark:text-blue-300">
+                                  {player.contactType === 'Phone' ? '📱' : '✉️'} {player.contactInfo}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-center space-x-3">
+                          {!hasUserTeamSubmitted && scoreStatus.status === 'none' && (
+                            <Dialog open={scoreEntryOpen === match.id} onOpenChange={(open) => {
+                              setScoreEntryOpen(open ? match.id : null);
+                              if (!open) setScoreData({ score: '', winner: '' });
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button className="btn-hero">
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Enter Match Score
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Enter Match Score</DialogTitle>
+                                  <DialogDescription>
+                                    Enter the final score for your doubles match
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="score">Match Score</Label>
+                                    <Input
+                                      id="score"
+                                      type="text"
+                                      placeholder="e.g., 11-9, 11-7, 11-3"
+                                      value={scoreData.score}
+                                      onChange={(e) => setScoreData(prev => ({ ...prev, score: e.target.value }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="winner">Winner</Label>
+                                    <select
+                                      id="winner"
+                                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                      value={scoreData.winner}
+                                      onChange={(e) => setScoreData(prev => ({ ...prev, winner: e.target.value }))}
+                                    >
+                                      <option value="">Select winner</option>
+                                      <option value="team1">Your Team</option>
+                                      <option value="team2">Opposing Team</option>
+                                    </select>
+                                  </div>
+                                  <Button 
+                                    onClick={() => handleScoreSubmit(match.id)}
+                                    disabled={submittingScore}
+                                    className="w-full btn-hero"
+                                  >
+                                    {submittingScore ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Submitting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check className="mr-2 h-4 w-4" />
+                                        Submit Score
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          {!hasUserTeamSubmitted && (scoreStatus.status === 'team1' || scoreStatus.status === 'team2') && (
+                            <Button 
+                              onClick={() => handleScoreConfirmation(match.id)}
+                              disabled={submittingScore}
+                              className="btn-hero"
+                            >
+                              {submittingScore ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Confirming...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="mr-2 h-4 w-4" />
+                                  Confirm Score
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          
+                          {hasUserTeamSubmitted && (
+                            <Badge className="bg-success/10 text-success px-4 py-2">
+                              <Check className="h-4 w-4 mr-2" />
+                              Score Submitted
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
@@ -928,7 +868,7 @@ const Dashboard = () => {
                   Having trouble scheduling a match?
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Contact us at <strong>vancouverpickleballsmash@gmail.com</strong> if you need help resolving scheduling conflicts with your opponent.
+                  Contact us at <strong>vancouverpickleballsmash@gmail.com</strong> if you need help resolving scheduling conflicts with your opponents.
                 </p>
               </div>
             </div>
@@ -1021,7 +961,7 @@ const Dashboard = () => {
                   </li>
                   <li className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                    <span>Flexible scheduling with your opponent</span>
+                    <span>Flexible scheduling with your opponents (doubles format)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>

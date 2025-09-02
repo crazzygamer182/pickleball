@@ -4,18 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { supabase, type Match, type User } from '@/lib/supabase';
+import { supabase, type PickleballMatch, type PickleballMatchWithPlayers, type User } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Matches = () => {
   const { user } = useAuth();
   const [searchPlayer, setSearchPlayer] = useState('');
-  const [matches, setMatches] = useState<Array<Match & { 
-    player1: User; 
-    player2: User; 
-    player1_rank?: number;
-    player2_rank?: number;
-  }>>([]);
+  const [matches, setMatches] = useState<PickleballMatchWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch matches data
@@ -24,46 +19,20 @@ const Matches = () => {
       try {
         // Fetch matches with player data
         const { data: matchesData, error: matchesError } = await supabase
-          .from('matches')
+          .from('pickleball_matches')
           .select(`
             *,
-            player1:users!matches_player1_id_fkey(*),
-            player2:users!matches_player2_id_fkey(*)
+            player1:users!pickleball_matches_player1_id_fkey(*),
+            player2:users!pickleball_matches_player2_id_fkey(*)
           `)
           .order('week', { ascending: false })
           .order('created_at', { ascending: false });
 
         if (matchesError) throw matchesError;
 
-        // Add player ranks to matches (using first ladder membership for each player)
-        const matchesWithRanks = await Promise.all(
-          (matchesData || []).map(async (match) => {
-            const [player1Rank, player2Rank] = await Promise.all([
-              supabase
-                .from('ladder_memberships')
-                .select('current_rank')
-                .eq('user_id', match.player1_id)
-                .eq('is_active', true)
-                .limit(1)
-                .single(),
-              supabase
-                .from('ladder_memberships')
-                .select('current_rank')
-                .eq('user_id', match.player2_id)
-                .eq('is_active', true)
-                .limit(1)
-                .single()
-            ]);
-
-            return {
-              ...match,
-              player1_rank: player1Rank.data?.current_rank || 0,
-              player2_rank: player2Rank.data?.current_rank || 0
-            };
-          })
-        );
-
-        setMatches(matchesWithRanks);
+        // For doubles matches, set them directly without individual ranks
+        // Team dynamics are more important than individual player ranks
+        setMatches(matchesData || []);
       } catch (error) {
         console.error('Error fetching matches:', error);
       } finally {
@@ -76,8 +45,10 @@ const Matches = () => {
 
   const filteredMatches = matches.filter(match => {
     const playerFilter = searchPlayer === '' || 
-      match.player1.name.toLowerCase().includes(searchPlayer.toLowerCase()) ||
-      match.player2.name.toLowerCase().includes(searchPlayer.toLowerCase());
+      match.team1_player1.name.toLowerCase().includes(searchPlayer.toLowerCase()) ||
+      match.team1_player2.name.toLowerCase().includes(searchPlayer.toLowerCase()) ||
+      match.team2_player1.name.toLowerCase().includes(searchPlayer.toLowerCase()) ||
+      match.team2_player2.name.toLowerCase().includes(searchPlayer.toLowerCase());
     
     return playerFilter;
   });
@@ -113,25 +84,33 @@ const Matches = () => {
       </CardHeader>
       
       <CardContent>
-        {/* Players */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-center flex-1">
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                #{match.player1_rank}
-              </span>
-              <span className="font-semibold">{match.player1.name}</span>
+        {/* Doubles Teams */}
+        <div className="space-y-3 mb-4">
+          {/* Team 1 */}
+          <div className="flex items-center justify-center">
+            <div className="text-center bg-primary/5 p-3 rounded-lg flex-1">
+              <p className="text-xs font-medium text-primary mb-1">Team 1</p>
+              <div className="flex items-center justify-center space-x-2">
+                <span className="font-medium text-sm">{match.team1_player1.name}</span>
+                <span className="text-muted-foreground">+</span>
+                <span className="font-medium text-sm">{match.team1_player2.name}</span>
+              </div>
             </div>
           </div>
-          
-          <div className="mx-4 text-muted-foreground font-bold">VS</div>
-          
-          <div className="text-center flex-1">
-            <div className="flex items-center justify-center space-x-2">
-              <span className="font-semibold">{match.player2.name}</span>
-              <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                #{match.player2_rank}
-              </span>
+
+          <div className="text-center">
+            <Badge variant="outline" className="font-bold">VS</Badge>
+          </div>
+
+          {/* Team 2 */}
+          <div className="flex items-center justify-center">
+            <div className="text-center bg-muted/30 p-3 rounded-lg flex-1">
+              <p className="text-xs font-medium mb-1">Team 2</p>
+              <div className="flex items-center justify-center space-x-2">
+                <span className="font-medium text-sm">{match.team2_player1.name}</span>
+                <span className="text-muted-foreground">+</span>
+                <span className="font-medium text-sm">{match.team2_player2.name}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -144,13 +123,18 @@ const Matches = () => {
           </div>
         )}
 
-        {match.status === 'completed' && match.player1_score !== null && match.player2_score !== null && (
+        {match.status === 'completed' && match.team1_score && match.team2_score && (
           <div className="text-center">
             <div className="text-sm font-semibold text-success mb-1">
               Match Completed
             </div>
             <div className="text-sm text-muted-foreground">
-              Score: {match.player1_score} - {match.player2_score}
+              Score: {match.team1_score} 
+              {match.team1_winner_submitted && match.team2_winner_submitted && match.team1_winner_submitted === match.team2_winner_submitted && (
+                <span className="ml-2 text-primary font-medium">
+                  (Winner: {match.team1_winner_submitted === 'team1' ? 'Team 1' : 'Team 2'})
+                </span>
+              )}
             </div>
           </div>
         )}

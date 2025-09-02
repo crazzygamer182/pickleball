@@ -4,12 +4,12 @@ import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Loader2, Flame, ArrowUp
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, type Ladder, type LadderMembership, type User as UserType } from '@/lib/supabase';
+import { supabase, type PickleballLadder, type PickleballLadderMembership, type User as UserType } from '@/lib/supabase';
 
 const Ladders = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [ladderMemberships, setLadderMemberships] = useState<Array<LadderMembership & { user: UserType; ladder: Ladder }>>([]);
+  const [ladderMemberships, setLadderMemberships] = useState<Array<PickleballLadderMembership & { user: UserType; ladder: PickleballLadder }>>([]);
   const [loading, setLoading] = useState(true);
 
   // Fake player names to fill out the ladder
@@ -37,10 +37,9 @@ const Ladders = () => {
         
         // First get the pickleball ladder ID (competitive type in database)
         const { data: pickleballLadder, error: ladderError } = await supabase
-          .from('ladders')
+          .from('pickleball_ladders')
           .select('id')
           .eq('type', 'competitive')
-          .eq('sport', 'pickleball')
           .single();
 
         if (ladderError || !pickleballLadder) {
@@ -50,11 +49,11 @@ const Ladders = () => {
 
         // Then fetch memberships for that specific ladder
         const { data: memberships, error } = await supabase
-          .from('ladder_memberships')
+          .from('pickleball_ladder_memberships')
           .select(`
             *,
             user:users(*),
-            ladder:ladders(*)
+            ladder:pickleball_ladders(*)
           `)
           .eq('is_active', true)
           .eq('ladder_id', pickleballLadder.id)
@@ -123,7 +122,7 @@ const Ladders = () => {
       },
       ladder: {
         id: 'fake-ladder',
-        name: 'Pickleball Ladder',
+        name: 'Pickleball Doubles Ladder',
         type: 'competitive' as const,
         sport: 'pickleball',
         fee: 10,
@@ -142,7 +141,7 @@ const Ladders = () => {
             🏆 Ladder Rankings
           </h1>
           <p className="text-lg text-muted-foreground">
-            Current ladder rankings (2.5-4.0 skill level)
+            Current doubles ladder rankings (2.5-4.0 skill level)
           </p>
         </div>
 
@@ -152,10 +151,10 @@ const Ladders = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center">
                 <Trophy className="h-6 w-6 mr-2 text-primary" />
-                Current Rankings
+                Current Doubles Team Rankings
               </span>
               <Badge className="bg-primary/10 text-primary">
-                {ladderMemberships.length + 10} Players
+                {ladderMemberships.length + 10} Teams
               </Badge>
             </CardTitle>
           </CardHeader>

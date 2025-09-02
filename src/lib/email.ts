@@ -244,6 +244,135 @@ export const sendMatchCancellationEmail = async (player1Email: string, player1Na
   ]);
 } 
 
+export const sendPickleballDoublesMatchNotificationEmails = async (
+  team1Player1Email: string, team1Player1Name: string, team1Player1Phone: string | undefined,
+  team1Player2Email: string, team1Player2Name: string, team1Player2Phone: string | undefined,
+  team2Player1Email: string, team2Player1Name: string, team2Player1Phone: string | undefined,
+  team2Player2Email: string, team2Player2Name: string, team2Player2Phone: string | undefined,
+  week: number
+) => {
+  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  
+  // Helper function to create email for each player
+  const createEmailForPlayer = (
+    playerEmail: string,
+    playerName: string,
+    partnerName: string,
+    partnerPhone: string | undefined,
+    opponent1Name: string,
+    opponent1Phone: string | undefined,
+    opponent2Name: string,
+    opponent2Phone: string | undefined
+  ): EmailData => ({
+    to: playerEmail,
+    from: 'Vancouver Pickleball Smash <admin@vancouvertennisclash.com>',
+    subject: `Doubles Match Scheduled - Week ${week} - Vancouver Pickleball Smash`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2563eb;">🏓 Vancouver Pickleball Smash</h2>
+        <p>Hello ${playerName},</p>
+        <p>You have a doubles match scheduled for <strong>Week ${week}</strong>!</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #1f2937;">Match Details</h3>
+          <p style="margin: 0; color: #6b7280;">
+            <strong>Week:</strong> ${week}<br>
+            <strong>Format:</strong> Doubles Match
+          </p>
+        </div>
+
+        <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #1e40af;">Your Partner</h3>
+          <p style="margin: 0; color: #1e40af;">
+            <strong>Name:</strong> ${partnerName}<br>
+            <strong>Phone:</strong> ${partnerPhone || 'Not provided'}
+          </p>
+        </div>
+
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #92400e;">Opposing Team</h3>
+          <p style="margin: 0; color: #92400e;">
+            <strong>${opponent1Name}</strong><br>
+            Phone: ${opponent1Phone || 'Not provided'}<br><br>
+            <strong>${opponent2Name}</strong><br>
+            Phone: ${opponent2Phone || 'Not provided'}
+          </p>
+        </div>
+
+        <p>Please coordinate with your partner and the opposing team to schedule your match. You can view all your match details and submit scores on your dashboard.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View Dashboard
+          </a>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">
+          <strong>Dashboard Link:</strong> <a href="${dashboardUrl}" style="color: #2563eb;">${dashboardUrl}</a>
+        </p>
+
+        <p>Good luck with your doubles match!</p>
+        <p>Best regards,<br>Vancouver Pickleball Smash Admin Team</p>
+      </div>
+    `,
+    text: `Hello ${playerName},
+
+You have a doubles match scheduled for Week ${week}!
+
+Match Details:
+- Week: ${week}
+- Format: Doubles Match
+
+Your Partner:
+- Name: ${partnerName}
+- Phone: ${partnerPhone || 'Not provided'}
+
+Opposing Team:
+- ${opponent1Name} (Phone: ${opponent1Phone || 'Not provided'})
+- ${opponent2Name} (Phone: ${opponent2Phone || 'Not provided'})
+
+Please coordinate with your partner and the opposing team to schedule your match. You can view all your match details and submit scores on your dashboard.
+
+Dashboard: ${dashboardUrl}
+
+Good luck with your doubles match!
+
+Best regards,
+Vancouver Pickleball Smash Admin Team`
+  });
+
+  // Create emails for all 4 players
+  const emails = [
+    createEmailForPlayer(
+      team1Player1Email, team1Player1Name,
+      team1Player2Name, team1Player2Phone,
+      team2Player1Name, team2Player1Phone,
+      team2Player2Name, team2Player2Phone
+    ),
+    createEmailForPlayer(
+      team1Player2Email, team1Player2Name,
+      team1Player1Name, team1Player1Phone,
+      team2Player1Name, team2Player1Phone,
+      team2Player2Name, team2Player2Phone
+    ),
+    createEmailForPlayer(
+      team2Player1Email, team2Player1Name,
+      team2Player2Name, team2Player2Phone,
+      team1Player1Name, team1Player1Phone,
+      team1Player2Name, team1Player2Phone
+    ),
+    createEmailForPlayer(
+      team2Player2Email, team2Player2Name,
+      team2Player1Name, team2Player1Phone,
+      team1Player1Name, team1Player1Phone,
+      team1Player2Name, team1Player2Phone
+    )
+  ];
+
+  // Send all emails
+  await Promise.all(emails.map(email => sendEmail(email)));
+};
+
 export const sendAdminJoinNotification = async (userName: string, userEmail: string, ladderName: string) => {
   const emailData: EmailData = {
     to: 'nirmay.singh.lamba@gmail.com',

@@ -35,7 +35,7 @@ const Home = () => {
         {/* Hero Content */}
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <Badge className="mb-6 bg-accent text-accent-foreground font-semibold px-4 py-2">
-            Vancouver's Premier Pickleball Ladder
+            Vancouver's Premier Doubles Pickleball Ladder
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
@@ -43,7 +43,7 @@ const Home = () => {
           </h1>
           
           <p className="text-xl md:text-2xl mb-8 text-gray-200 max-w-2xl mx-auto">
-            Weekly matchups. Beginner-friendly. Climb your way to the top.
+            Weekly doubles matchups. Choose your partner or get matched. Climb your way to the top.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -63,7 +63,7 @@ const Home = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-gradient">How It Works</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Join Vancouver's premier pickleball ladder system designed for players of all skill levels.
+              Join Vancouver's premier doubles pickleball ladder system designed for teams of all skill levels.
             </p>
           </div>
           
@@ -74,12 +74,12 @@ const Home = () => {
                 <div className="mx-auto mb-4 p-4 bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center">
                   <Trophy className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Pickleball Ladder</CardTitle>
-                <Badge className="bg-primary/10 text-primary w-fit mx-auto">2.5-4.0 Skill Level</Badge>
+                <CardTitle className="text-xl">Doubles Pickleball Ladder</CardTitle>
+                <Badge className="bg-primary/10 text-primary w-fit mx-auto">Teams • 2.5-4.0 Skill Level</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  For players of all levels (2.5-4.0 skill level) looking to improve their game.
+                  Bring your own partner or get matched with someone new each game! Doubles format for players of all levels (2.5-4.0 skill level) looking to improve their doubles game.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -90,19 +90,19 @@ const Home = () => {
           {/* Weekly Match System */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
-              <h3 className="text-2xl font-bold mb-4">Weekly Match System</h3>
+              <h3 className="text-2xl font-bold mb-4">Weekly Doubles Match System</h3>
               <p className="text-lg text-muted-foreground mb-6">
-                Every week, you'll receive 1-2 match assignments against players near your ranking. 
-                Win to climb the ladder, lose and you'll have a chance to bounce back next week.
+                Every week, you'll receive doubles match assignments against teams near your ranking. 
+                Partner with a friend or get matched with someone new each game. Win to climb the ladder, lose and you'll have a chance to bounce back next week.
               </p>
                              <ul className="space-y-3">
                  <li className="flex items-start space-x-3">
                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                   <span>Players coordinate and schedule their own matches</span>
+                   <span>Choose your partner or get matched with someone each game</span>
                  </li>
                  <li className="flex items-start space-x-3">
                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                   <span>Flexible scheduling with your opponent</span>
+                   <span>Flexible scheduling with your opponents (4-player doubles)</span>
                  </li>
                  <li className="flex items-start space-x-3">
                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
@@ -134,30 +134,30 @@ const Home = () => {
           <div className="text-center mb-16">
             <h3 className="text-2xl font-bold mb-4">All Skill Levels Welcome</h3>
             <p className="text-lg text-muted-foreground mb-6 max-w-3xl mx-auto">
-              New to pickleball? No problem! Our ladder welcomes players from 2.5-4.0 skill level. 
-              We provide a supportive environment for all players to improve their game and enjoy competitive matches.
+              New to doubles pickleball? No problem! Our team-based ladder welcomes players from 2.5-4.0 skill level. 
+              Choose to play with the same partner every week, or try different partners each game - we'll match you with someone at your skill level. We provide a supportive environment for all players to improve their doubles game.
             </p>
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🎾</span>
                 </div>
-                <h4 className="font-semibold mb-2">All Skill Levels Welcome</h4>
-                <p className="text-sm text-muted-foreground">From beginners to advanced players</p>
+                <h4 className="font-semibold mb-2">Teams Welcome</h4>
+                <p className="text-sm text-muted-foreground">From beginner to advanced doubles teams</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🤝</span>
                 </div>
-                <h4 className="font-semibold mb-2">Supportive Community</h4>
-                <p className="text-sm text-muted-foreground">Friendly players who help each other improve</p>
+                <h4 className="font-semibold mb-2">Flexible Partnering</h4>
+                <p className="text-sm text-muted-foreground">Play with friends or get matched each game</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">📈</span>
                 </div>
-                <h4 className="font-semibold mb-2">Track Your Progress</h4>
-                <p className="text-sm text-muted-foreground">See your improvement over time</p>
+                <h4 className="font-semibold mb-2">Track Team Progress</h4>
+                <p className="text-sm text-muted-foreground">See your doubles team improvement over time</p>
               </div>
             </div>
           </div>

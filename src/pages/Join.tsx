@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, type Ladder } from '@/lib/supabase';
+import { supabase, type PickleballLadder } from '@/lib/supabase';
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '@/lib/stripe';
 import PaymentForm from '@/components/PaymentForm';
@@ -30,7 +30,7 @@ const Join = () => {
     locationText: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [ladders, setLadders] = useState<Ladder[]>([]);
+  const [ladders, setLadders] = useState<PickleballLadder[]>([]);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment' | 'complete'>('form');
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const { toast } = useToast();
@@ -45,9 +45,8 @@ const Join = () => {
     const fetchLadders = async () => {
       try {
         const { data, error } = await supabase
-          .from('ladders')
+          .from('pickleball_ladders')
           .select('*')
-          .eq('sport', 'pickleball')
           .order('name');
         
         if (error) throw error;
@@ -151,7 +150,7 @@ const Join = () => {
 
         // 4. Get the next rank (bottom of ladder)
         const { data: memberships, error: rankError } = await supabase
-          .from('ladder_memberships')
+          .from('pickleball_ladder_memberships')
           .select('current_rank')
           .eq('ladder_id', formData.ladder)
           .eq('is_active', true)
@@ -164,7 +163,7 @@ const Join = () => {
 
         // 5. Add user to ladder
         const { error: membershipError } = await supabase
-          .from('ladder_memberships')
+          .from('pickleball_ladder_memberships')
           .insert({
             user_id: authData.user.id,
             ladder_id: formData.ladder,
@@ -175,7 +174,7 @@ const Join = () => {
 
         // 6. Update payment record with success
         const { error: paymentError } = await supabase
-          .from('payments')
+          .from('pickleball_payments')
           .insert({
             user_id: authData.user.id,
             ladder_id: formData.ladder,
@@ -337,13 +336,27 @@ const Join = () => {
                                 <span className="text-sm font-medium text-primary">${ladder.fee}</span>
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                For players of all levels (2.5-4.0 skill level) looking to improve their game
+                                Doubles format for players of all levels (2.5-4.0 skill level) looking to improve their game
                               </p>
                             </Label>
                           </div>
                         </div>
                       ))}
                     </RadioGroup>
+                  </div>
+
+                  {/* Partner Matching Notice */}
+                  <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
+                      <Users className="h-5 w-5 mr-2" />
+                      Doubles Partner Matching
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                      By default, you'll be matched with a different partner each game at your skill level. This is a great way to meet new players and improve your doubles game!
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      <strong>Prefer to choose your own partner?</strong> Text us at <a href="tel:7783251182" className="font-semibold underline hover:text-blue-600 dark:hover:text-blue-200">(778) 325-1182</a> after joining to set up consistent partner pairings.
+                    </p>
                   </div>
 
                   {/* Location Picker */}
@@ -437,7 +450,7 @@ const Join = () => {
                 <ul className="space-y-3">
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                    <span>Weekly match assignments based on your ranking</span>
+                    <span>Weekly doubles match assignments based on your team ranking</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
@@ -449,7 +462,7 @@ const Join = () => {
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                    <span>Flexible scheduling with your opponent</span>
+                    <span>Flexible scheduling with your opponents (doubles format)</span>
                   </li>
                   <li className="flex items-start space-x-3">
                     <CheckCircle className="h-5 w-5 text-success mt-0.5" />
@@ -471,8 +484,8 @@ const Join = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Pickleball Ladder (2.5-4.0)</h4>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">For players of all skill levels looking to improve</p>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Pickleball Doubles Ladder (2.5-4.0)</h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">Doubles format for players of all skill levels looking to improve</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Join our inclusive ladder system designed for continuous improvement!
@@ -490,7 +503,7 @@ const Join = () => {
                 <ul className="space-y-2 text-sm">
                   <li>• Must be 16+ years old</li>
                   <li>• Own pickleball equipment (paddle, appropriate shoes)</li>
-                  <li>• Committed to weekly match participation</li>
+                  <li>• Committed to weekly doubles match participation</li>
                   <li>• Respectful and sportsmanlike conduct</li>
                 </ul>
               </CardContent>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, type Ladder, type LadderMembership } from '@/lib/supabase';
+import { supabase, type PickleballLadder, type PickleballLadderMembership } from '@/lib/supabase';
 import { sendAdminJoinNotification } from '@/lib/email';
 import { useAuth } from '@/contexts/AuthContext';
 import { Elements } from '@stripe/react-stripe-js';
@@ -15,9 +15,9 @@ import PaymentForm from '@/components/PaymentForm';
 const JoinAdditionalLadder = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [ladders, setLadders] = useState<Ladder[]>([]);
-  const [userMemberships, setUserMemberships] = useState<LadderMembership[]>([]);
-  const [selectedLadder, setSelectedLadder] = useState<Ladder | null>(null);
+  const [ladders, setLadders] = useState<PickleballLadder[]>([]);
+  const [userMemberships, setUserMemberships] = useState<PickleballLadderMembership[]>([]);
+  const [selectedLadder, setSelectedLadder] = useState<PickleballLadder | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'payment' | 'complete'>('select');
@@ -39,9 +39,8 @@ const JoinAdditionalLadder = () => {
       try {
         // Fetch all ladders
         const { data: laddersData, error: laddersError } = await supabase
-          .from('ladders')
+          .from('pickleball_ladders')
           .select('*')
-          .eq('sport', 'pickleball')
           .order('name');
         
         if (laddersError) throw laddersError;
@@ -49,7 +48,7 @@ const JoinAdditionalLadder = () => {
 
         // Fetch user's current memberships
         const { data: membershipsData, error: membershipsError } = await supabase
-          .from('ladder_memberships')
+          .from('pickleball_ladder_memberships')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true);
@@ -77,7 +76,7 @@ const JoinAdditionalLadder = () => {
     return ladders.filter(ladder => !userLadderIds.includes(ladder.id));
   };
 
-  const handleLadderSelect = (ladder: Ladder) => {
+  const handleLadderSelect = (ladder: PickleballLadder) => {
     setSelectedLadder(ladder);
     setCurrentStep('payment');
   };
@@ -91,7 +90,7 @@ const JoinAdditionalLadder = () => {
     try {
       // Get the next rank (bottom of ladder)
       const { data: memberships, error: rankError } = await supabase
-        .from('ladder_memberships')
+        .from('pickleball_ladder_memberships')
         .select('current_rank')
         .eq('ladder_id', selectedLadder.id)
         .eq('is_active', true)
@@ -104,7 +103,7 @@ const JoinAdditionalLadder = () => {
 
       // Add user to ladder
       const { error: membershipError } = await supabase
-        .from('ladder_memberships')
+        .from('pickleball_ladder_memberships')
         .insert({
           user_id: user.id,
           ladder_id: selectedLadder.id,
@@ -116,7 +115,7 @@ const JoinAdditionalLadder = () => {
 
       // Record payment
         const { error: paymentError } = await supabase
-          .from('payments')
+          .from('pickleball_payments')
           .insert({
             user_id: user.id,
             ladder_id: selectedLadder.id,
@@ -147,7 +146,7 @@ const JoinAdditionalLadder = () => {
 
       // Refresh user memberships
       const { data: newMembershipsData, error: newMembershipsError } = await supabase
-        .from('ladder_memberships')
+        .from('pickleball_ladder_memberships')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true);
