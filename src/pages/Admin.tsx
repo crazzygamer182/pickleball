@@ -18,6 +18,8 @@ const Admin = () => {
   const [sendNotifications, setSendNotifications] = useState(true);
   const [matches, setMatches] = useState<any[]>([]);
   const [markingComplete, setMarkingComplete] = useState<string | null>(null);
+  const [totalPlayers, setTotalPlayers] = useState(0);
+  const [newPlayersToday, setNewPlayersToday] = useState(0);
   const { toast } = useToast();
 
   // Match creation form state
@@ -63,6 +65,22 @@ const Admin = () => {
 
         if (matchesError) throw matchesError;
         setMatches(matchesData || []);
+
+        // Get total player count and new signups today
+        const { data: allPlayersData, error: playersError } = await supabase
+          .from('users')
+          .select('created_at')
+          .eq('type', 'pickleball');
+
+        if (playersError) throw playersError;
+
+        const today = new Date().toDateString();
+        const newToday = (allPlayersData || []).filter(player => 
+          new Date(player.created_at).toDateString() === today
+        ).length;
+
+        setTotalPlayers((allPlayersData || []).length);
+        setNewPlayersToday(newToday);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -392,9 +410,23 @@ const Admin = () => {
             <Shield className="inline-block h-10 w-10 mr-3 text-primary" />
             Pickleball Admin Panel
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
             Manage matches, players, and league operations
           </p>
+          
+          {/* Player Statistics */}
+          <div className="flex justify-center space-x-8 text-sm">
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-primary">{totalPlayers}</span>
+              <span className="text-muted-foreground">total players</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Plus className="h-4 w-4 text-green-600" />
+              <span className="font-semibold text-green-600">{newPlayersToday}</span>
+              <span className="text-muted-foreground">joined today</span>
+            </div>
+          </div>
         </div>
 
         {loading ? (
