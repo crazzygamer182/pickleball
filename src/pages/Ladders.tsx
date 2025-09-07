@@ -210,30 +210,27 @@ const Ladders = () => {
                       </div>
 
                       <div className="flex items-center space-x-4">
+                        {membership.winning_streak > 0 && (
+                          <div className="flex items-center space-x-1">
+                            <Flame className="h-4 w-4 text-orange-500" />
+                            <span className="text-sm font-medium text-orange-600">
+                              {membership.winning_streak}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {membership.trend !== 'none' && (
+                          <div className="flex items-center">
+                            {getTrendIcon(membership.trend)}
+                          </div>
+                        )}
+
                         <div className="flex items-center space-x-1">
                           <Trophy className="h-4 w-4 text-primary" />
                           <span className="text-sm font-semibold text-primary">
                             {membership.score || 100}
                           </span>
                         </div>
-
-                        {membership.winning_streak > 0 && (
-                          <div className="flex items-center space-x-1">
-                            <Flame className="h-4 w-4 text-orange-500" />
-                            <span className="text-sm font-medium text-orange-600">
-                              {membership.winning_streak} win streak
-                            </span>
-                          </div>
-                        )}
-                        
-                        {membership.trend !== 'none' && (
-                          <div className="flex items-center space-x-1">
-                            {getTrendIcon(membership.trend)}
-                            <span className="text-sm text-muted-foreground capitalize">
-                              {membership.trend}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );

@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone } from 'lucide-react';
+import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone, GripVertical, Trophy } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +12,62 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, type User } from '@/lib/supabase';
+import { supabase, type User, type PickleballLadderMembership } from '@/lib/supabase';
 import { sendPickleballDoublesMatchNotificationEmails } from '@/lib/email';
+
+interface SortableItemProps {
+  id: string;
+  player: PickleballLadderMembership & { user: User };
+  rank: number;
+}
+
+function SortableItem({ id, player, rank }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-3 bg-muted/20 rounded border cursor-move hover:bg-muted/40 transition-colors"
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex items-center space-x-3">
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="w-8 h-6 flex items-center justify-center text-xs">
+            #{rank}
+          </Badge>
+          <span className="font-medium">{player.user.name}</span>
+        </div>
+      </div>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1">
+          <Trophy className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold text-primary">
+            {player.score || 100}
+          </span>
+        </div>
+        {player.winning_streak > 0 && (
+          <Badge className="bg-orange-100 text-orange-600 text-xs">
+            {player.winning_streak} wins
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const Admin = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -20,7 +78,16 @@ const Admin = () => {
   const [markingComplete, setMarkingComplete] = useState<string | null>(null);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [newPlayersToday, setNewPlayersToday] = useState(0);
+  const [ladderPlayers, setLadderPlayers] = useState<(PickleballLadderMembership & { user: User })[]>([]);
+  const [updatingRankings, setUpdatingRankings] = useState(false);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Match creation form state
   const [matchForm, setMatchForm] = useState({
@@ -82,6 +149,19 @@ const Admin = () => {
         setTotalPlayers((allPlayersData || []).length);
         setNewPlayersToday(newToday);
 
+        // Fetch ladder rankings
+        const { data: ladderData, error: ladderError } = await supabase
+          .from('pickleball_ladder_memberships')
+          .select(`
+            *,
+            user:users(*)
+          `)
+          .eq('is_active', true)
+          .order('current_rank', { ascending: true });
+
+        if (ladderError) throw ladderError;
+        setLadderPlayers(ladderData || []);
+
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -96,6 +176,48 @@ const Admin = () => {
 
     fetchData();
   }, [toast]);
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setLadderPlayers((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  const updateRankings = async () => {
+    setUpdatingRankings(true);
+    try {
+      // Update current_rank for all players based on their new positions
+      const updates = ladderPlayers.map((player, index) => 
+        supabase
+          .from('pickleball_ladder_memberships')
+          .update({ current_rank: index + 1 })
+          .eq('id', player.id)
+      );
+
+      await Promise.all(updates);
+
+      toast({
+        title: "Rankings updated successfully!",
+        description: "All player rankings have been saved.",
+      });
+    } catch (error) {
+      console.error('Error updating rankings:', error);
+      toast({
+        title: "Error updating rankings",
+        description: "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingRankings(false);
+    }
+  };
 
   const handleCreateMatch = async () => {
     // Validation
@@ -645,6 +767,75 @@ const Admin = () => {
 
           </div>
         )}
+
+        {/* Ladder Rankings Management */}
+        <Card className="card-premium mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <Trophy className="h-6 w-6 mr-2 text-primary" />
+                Manage Ladder Rankings
+              </span>
+              <div className="flex items-center space-x-2">
+                <Badge className="bg-primary/10 text-primary">
+                  {ladderPlayers.length} Players
+                </Badge>
+                <Button
+                  onClick={updateRankings}
+                  disabled={updatingRankings}
+                  size="sm"
+                  className="btn-hero"
+                >
+                  {updatingRankings ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Rankings'
+                  )}
+                </Button>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading rankings...</span>
+              </div>
+            ) : ladderPlayers.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                No players in the ladder yet
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground mb-4">
+                  Drag players up or down to change their ranking. Click "Save Rankings" to update the ladder.
+                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={ladderPlayers.map(p => p.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {ladderPlayers.map((player, index) => (
+                      <SortableItem
+                        key={player.id}
+                        id={player.id}
+                        player={player}
+                        rank={index + 1}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Admin Matches List - Compact View */}
         <Card className="card-premium mt-8">
