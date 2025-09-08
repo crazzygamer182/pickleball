@@ -373,6 +373,105 @@ Vancouver Pickleball Smash Admin Team`
   await Promise.all(emails.map(email => sendEmail(email)));
 };
 
+export const sendPickleballDoublesMatchCancellationEmails = async (
+  team1Player1Email: string, team1Player1Name: string,
+  team1Player2Email: string, team1Player2Name: string,
+  team2Player1Email: string, team2Player1Name: string,
+  team2Player2Email: string, team2Player2Name: string,
+  week: number
+) => {
+  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  
+  const createCancellationEmail = (
+    playerEmail: string,
+    playerName: string,
+    partnerName: string,
+    opponent1Name: string,
+    opponent2Name: string
+  ): EmailData => ({
+    to: playerEmail,
+    from: 'Vancouver Pickleball Smash <admin@vancouvertennisclash.com>',
+    subject: `Match Cancelled - Week ${week} - Vancouver Pickleball Smash`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #dc2626;">🏓 Vancouver Pickleball Smash - Match Cancelled</h2>
+        <p>Hello ${playerName},</p>
+        <p>Your doubles match for <strong>Week ${week}</strong> has been <strong>cancelled</strong>.</p>
+        
+        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="margin: 0 0 10px 0; color: #991b1b;">Cancelled Match Details</h3>
+          <p style="margin: 0; color: #7f1d1d;">
+            <strong>Week:</strong> ${week}<br>
+            <strong>Your Partner:</strong> ${partnerName}<br>
+            <strong>Opposing Team:</strong> ${opponent1Name} & ${opponent2Name}<br>
+            <strong>Status:</strong> <span style="color: #dc2626; font-weight: bold;">CANCELLED</span>
+          </p>
+        </div>
+
+        <p>This match has been cancelled by the admin team. You can view your updated match schedule on your dashboard.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View Dashboard
+          </a>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">
+          <strong>Dashboard Link:</strong> <a href="${dashboardUrl}" style="color: #2563eb;">${dashboardUrl}</a>
+        </p>
+
+        <p>If you have any questions about this cancellation, please contact the admin team.</p>
+        <p>Best regards,<br>Vancouver Pickleball Smash Admin Team</p>
+      </div>
+    `,
+    text: `Hello ${playerName},
+
+Your doubles match for Week ${week} has been CANCELLED.
+
+Cancelled Match Details:
+- Week: ${week}
+- Your Partner: ${partnerName}
+- Opposing Team: ${opponent1Name} & ${opponent2Name}
+- Status: CANCELLED
+
+This match has been cancelled by the admin team. You can view your updated match schedule on your dashboard.
+
+Dashboard: ${dashboardUrl}
+
+If you have any questions about this cancellation, please contact the admin team.
+
+Best regards,
+Vancouver Pickleball Smash Admin Team`
+  });
+
+  // Create cancellation emails for all 4 players
+  const emails = [
+    createCancellationEmail(
+      team1Player1Email, team1Player1Name,
+      team1Player2Name,
+      team2Player1Name, team2Player2Name
+    ),
+    createCancellationEmail(
+      team1Player2Email, team1Player2Name,
+      team1Player1Name,
+      team2Player1Name, team2Player2Name
+    ),
+    createCancellationEmail(
+      team2Player1Email, team2Player1Name,
+      team2Player2Name,
+      team1Player1Name, team1Player2Name
+    ),
+    createCancellationEmail(
+      team2Player2Email, team2Player2Name,
+      team2Player1Name,
+      team1Player1Name, team1Player2Name
+    )
+  ];
+
+  // Send all cancellation emails
+  await Promise.all(emails.map(email => sendEmail(email)));
+};
+
 export const sendAdminJoinNotification = async (userName: string, userEmail: string, ladderName: string) => {
   const emailData: EmailData = {
     to: 'nirmay.singh.lamba@gmail.com',

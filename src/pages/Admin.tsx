@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone, GripVertical, Trophy } from 'lucide-react';
+import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone, GripVertical, Trophy, Trash2 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, type User, type PickleballLadderMembership } from '@/lib/supabase';
-import { sendPickleballDoublesMatchNotificationEmails } from '@/lib/email';
+import { sendPickleballDoublesMatchNotificationEmails, sendPickleballDoublesMatchCancellationEmails } from '@/lib/email';
 
 interface SortableItemProps {
   id: string;
@@ -76,6 +76,7 @@ const Admin = () => {
   const [sendNotifications, setSendNotifications] = useState(true);
   const [matches, setMatches] = useState<any[]>([]);
   const [markingComplete, setMarkingComplete] = useState<string | null>(null);
+  const [cancellingMatch, setCancellingMatch] = useState<string | null>(null);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [newPlayersToday, setNewPlayersToday] = useState(0);
   const [ladderPlayers, setLadderPlayers] = useState<(PickleballLadderMembership & { user: User })[]>([]);
@@ -120,10 +121,10 @@ const Admin = () => {
           .from('pickleball_matches')
           .select(`
             *,
-            team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text),
-            team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text),
-            team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text),
-            team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text),
+            team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text, email),
+            team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text, email),
+            team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text, email),
+            team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text, email),
             team1_score_submitter:users!pickleball_matches_team1_score_submitted_by_fkey(name),
             team2_score_submitter:users!pickleball_matches_team2_score_submitted_by_fkey(name)
           `)
@@ -284,10 +285,10 @@ const Admin = () => {
         .from('pickleball_matches')
         .select(`
           *,
-          team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text),
-          team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text),
-          team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text),
-          team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text),
+          team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text, email),
+          team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text, email),
+          team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text, email),
+          team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text, email),
           team1_score_submitter:users!pickleball_matches_team1_score_submitted_by_fkey(name),
           team2_score_submitter:users!pickleball_matches_team2_score_submitted_by_fkey(name)
         `)
@@ -338,6 +339,72 @@ const Admin = () => {
       });
     } finally {
       setCreatingMatch(false);
+    }
+  };
+
+  const handleCancelMatch = async (matchId: string) => {
+    setCancellingMatch(matchId);
+    
+    try {
+      const match = matches.find(m => m.id === matchId);
+      if (!match) {
+        throw new Error('Match not found');
+      }
+
+      // Send cancellation emails to all 4 players
+      try {
+        await sendPickleballDoublesMatchCancellationEmails(
+          match.team1_player1.email, match.team1_player1.name,
+          match.team1_player2.email, match.team1_player2.name,
+          match.team2_player1.email, match.team2_player1.name,
+          match.team2_player2.email, match.team2_player2.name,
+          match.week
+        );
+        
+        console.log('✅ Cancellation emails sent to all 4 players');
+      } catch (emailError) {
+        console.error('Error sending cancellation emails:', emailError);
+        // Continue with deletion even if emails fail
+      }
+
+      // Delete the match from the database
+      const { error: deleteError } = await supabase
+        .from('pickleball_matches')
+        .delete()
+        .eq('id', matchId);
+
+      if (deleteError) throw deleteError;
+
+      // Refresh matches list
+      const { data: matchesData } = await supabase
+        .from('pickleball_matches')
+        .select(`
+          *,
+          team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text, email),
+          team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text, email),
+          team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text, email),
+          team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text, email),
+          team1_score_submitter:users!pickleball_matches_team1_score_submitted_by_fkey(name),
+          team2_score_submitter:users!pickleball_matches_team2_score_submitted_by_fkey(name)
+        `)
+        .order('week', { ascending: true })
+        .order('created_at', { ascending: false });
+      setMatches(matchesData || []);
+
+      toast({
+        title: "Match cancelled successfully!",
+        description: `Week ${match.week} match has been cancelled and players have been notified.`,
+      });
+
+    } catch (error: any) {
+      console.error('Error cancelling match:', error);
+      toast({
+        title: "Error cancelling match",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setCancellingMatch(null);
     }
   };
 
@@ -441,10 +508,10 @@ const Admin = () => {
         .from('pickleball_matches')
         .select(`
           *,
-          team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text),
-          team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text),
-          team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text),
-          team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text),
+          team1_player1:users!pickleball_matches_team1_player1_id_fkey(name, location_text, email),
+          team1_player2:users!pickleball_matches_team1_player2_id_fkey(name, location_text, email),
+          team2_player1:users!pickleball_matches_team2_player1_id_fkey(name, location_text, email),
+          team2_player2:users!pickleball_matches_team2_player2_id_fkey(name, location_text, email),
           team1_score_submitter:users!pickleball_matches_team1_score_submitted_by_fkey(name),
           team2_score_submitter:users!pickleball_matches_team2_score_submitted_by_fkey(name)
         `)
@@ -888,28 +955,54 @@ const Admin = () => {
                             {scoreStatus.display}
                           </span>
                           
-                          {/* Admin Action Button */}
-                          {(scoreStatus.status === 'partial' || scoreStatus.status === 'dispute') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleMarkComplete(match.id)}
-                              disabled={markingComplete === match.id}
-                              className="text-xs h-6 px-2"
-                            >
-                              {markingComplete === match.id ? (
-                                <>
-                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                  Marking...
-                                </>
-                              ) : (
-                                <>
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Mark Complete
-                                </>
-                              )}
-                            </Button>
-                          )}
+                          {/* Admin Action Buttons */}
+                          <div className="flex items-center space-x-2">
+                            {/* Cancel button for uncompleted matches */}
+                            {match.status !== 'completed' && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleCancelMatch(match.id)}
+                                disabled={cancellingMatch === match.id}
+                                className="text-xs h-6 px-2"
+                              >
+                                {cancellingMatch === match.id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Cancelling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Cancel
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {/* Mark complete button for partial or disputed matches */}
+                            {(scoreStatus.status === 'partial' || scoreStatus.status === 'dispute') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleMarkComplete(match.id)}
+                                disabled={markingComplete === match.id}
+                                className="text-xs h-6 px-2"
+                              >
+                                {markingComplete === match.id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                    Marking...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="h-3 w-3 mr-1" />
+                                    Mark Complete
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
