@@ -55,7 +55,7 @@ export const sendTestEmail = async (playerEmail: string, playerName: string) => 
 }
 
 export const sendMatchNotificationEmail = async (player1Email: string, player1Name: string, player1Phone: string | undefined, player2Email: string, player2Name: string, player2Phone: string | undefined, week: number) => {
-  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  const dashboardUrl = 'https://vanpickleballsmash.com/dashboard';
   
   // Email for Player 1
   const emailData1: EmailData = {
@@ -157,7 +157,7 @@ export const sendMatchNotificationEmail = async (player1Email: string, player1Na
 }
 
 export const sendMatchCancellationEmail = async (player1Email: string, player1Name: string, player2Email: string, player2Name: string, week: number) => {
-  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  const dashboardUrl = 'https://vanpickleballsmash.com/dashboard';
   
   // Email for Player 1
   const emailData1: EmailData = {
@@ -251,7 +251,7 @@ export const sendPickleballDoublesMatchNotificationEmails = async (
   team2Player2Email: string, team2Player2Name: string, team2Player2Phone: string | undefined,
   week: number
 ) => {
-  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  const dashboardUrl = 'https://vanpickleballsmash.com/dashboard';
   
   // Helper function to create email for each player
   const createEmailForPlayer = (
@@ -380,7 +380,7 @@ export const sendPickleballDoublesMatchCancellationEmails = async (
   team2Player2Email: string, team2Player2Name: string,
   week: number
 ) => {
-  const dashboardUrl = 'https://vancouverpickleballsmash.com/dashboard';
+  const dashboardUrl = 'https://vanpickleballsmash.com/dashboard';
   
   const createCancellationEmail = (
     playerEmail: string,
