@@ -178,14 +178,15 @@ const Admin = () => {
 
         if (allUsersError) throw allUsersError;
 
-        // Count matches for each player
+        // Count matches for each player (only non-completed matches)
         const playersWithMatchCounts = await Promise.all(
           (allUsersData || []).map(async (user) => {
-            // Count matches where the user is any of the 4 players in a doubles match
+            // Count matches where the user is any of the 4 players in a doubles match AND status is not 'completed'
             const { count, error: countError } = await supabase
               .from('pickleball_matches')
               .select('*', { count: 'exact', head: true })
-              .or(`team1_player1_id.eq.${user.id},team1_player2_id.eq.${user.id},team2_player1_id.eq.${user.id},team2_player2_id.eq.${user.id}`);
+              .or(`team1_player1_id.eq.${user.id},team1_player2_id.eq.${user.id},team2_player1_id.eq.${user.id},team2_player2_id.eq.${user.id}`)
+              .neq('status', 'completed');
 
             if (countError) {
               console.error('Error counting matches for user:', user.id, countError);
@@ -947,7 +948,7 @@ const Admin = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center">
                 <Users className="h-6 w-6 mr-2 text-primary" />
-                All Players by Match Count
+                All Players by Pending Matches
               </span>
               <Badge className="bg-primary/10 text-primary">
                 {allPlayersWithMatchCounts.length} Total Players
@@ -967,7 +968,7 @@ const Admin = () => {
             ) : (
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground mb-4">
-                  Players sorted by match count. Players with 0 matches are shown first.
+                  Players sorted by number of pending/scheduled matches. Players with 0 pending matches are shown first. Completed matches are not counted.
                 </div>
                 <div className="grid gap-2">
                   {allPlayersWithMatchCounts.map(({ user, matchCount }) => (
@@ -997,7 +998,7 @@ const Admin = () => {
                           variant={matchCount === 0 ? "secondary" : matchCount === 1 ? "outline" : "default"}
                           className={matchCount === 0 ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" : ""}
                         >
-                          {matchCount} {matchCount === 1 ? 'match' : 'matches'}
+                          {matchCount} pending {matchCount === 1 ? 'match' : 'matches'}
                         </Badge>
                         {user.phone_number && (
                           <div className="flex items-center text-xs text-muted-foreground">
