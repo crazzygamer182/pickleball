@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone, GripVertical, Trophy, Trash2 } from 'lucide-react';
+import { Shield, Plus, Users, Loader2, Mail, Check, X, Phone, GripVertical, Trophy, Trash2, User as UserIcon, MapPin } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -99,6 +99,12 @@ const Admin = () => {
     team2_player2_id: ''
   });
 
+  // State for all players with match counts
+  const [allPlayersWithMatchCounts, setAllPlayersWithMatchCounts] = useState<{
+    user: User;
+    matchCount: number;
+  }[]>([]);
+
   // Fetch users who are members of pickleball ladders and upcoming matches
   useEffect(() => {
     const fetchData = async () => {
@@ -162,6 +168,37 @@ const Admin = () => {
 
         if (ladderError) throw ladderError;
         setLadderPlayers(ladderData || []);
+
+        // Fetch ALL players (not just active ladder members) and count their matches
+        const { data: allUsersData, error: allUsersError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('type', 'pickleball')
+          .order('name');
+
+        if (allUsersError) throw allUsersError;
+
+        // Count matches for each player
+        const playersWithMatchCounts = await Promise.all(
+          (allUsersData || []).map(async (user) => {
+            // Count matches where the user is any of the 4 players in a doubles match
+            const { count, error: countError } = await supabase
+              .from('pickleball_matches')
+              .select('*', { count: 'exact', head: true })
+              .or(`team1_player1_id.eq.${user.id},team1_player2_id.eq.${user.id},team2_player1_id.eq.${user.id},team2_player2_id.eq.${user.id}`);
+
+            if (countError) {
+              console.error('Error counting matches for user:', user.id, countError);
+              return { user, matchCount: 0 };
+            }
+
+            return { user, matchCount: count || 0 };
+          })
+        );
+
+        // Sort players by match count (0 first, then 1, 2, etc.)
+        playersWithMatchCounts.sort((a, b) => a.matchCount - b.matchCount);
+        setAllPlayersWithMatchCounts(playersWithMatchCounts);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -899,6 +936,79 @@ const Admin = () => {
                     ))}
                   </SortableContext>
                 </DndContext>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Players List with Match Counts */}
+        <Card className="card-premium mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <Users className="h-6 w-6 mr-2 text-primary" />
+                All Players by Match Count
+              </span>
+              <Badge className="bg-primary/10 text-primary">
+                {allPlayersWithMatchCounts.length} Total Players
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading players...</span>
+              </div>
+            ) : allPlayersWithMatchCounts.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                No players found
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground mb-4">
+                  Players sorted by match count. Players with 0 matches are shown first.
+                </div>
+                <div className="grid gap-2">
+                  {allPlayersWithMatchCounts.map(({ user, matchCount }) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 bg-muted/20 rounded border hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <UserIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{user.name}</span>
+                        </div>
+                        {user.email && (
+                          <span className="text-xs text-muted-foreground">
+                            {user.email}
+                          </span>
+                        )}
+                        {user.location_text && (
+                          <Badge variant="outline" className="text-xs">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {user.location_text}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge
+                          variant={matchCount === 0 ? "secondary" : matchCount === 1 ? "outline" : "default"}
+                          className={matchCount === 0 ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" : ""}
+                        >
+                          {matchCount} {matchCount === 1 ? 'match' : 'matches'}
+                        </Badge>
+                        {user.phone_number && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {user.phone_number}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
