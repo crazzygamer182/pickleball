@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, type User, type PickleballLadderMembership } from '@/lib/supabase';
-import { sendPickleballDoublesMatchNotificationEmails, sendPickleballDoublesMatchCancellationEmails } from '@/lib/email';
+import { sendPickleballDoublesMatchNotificationEmails, sendPickleballDoublesMatchCancellationEmails, sendMembershipRenewalReminder } from '@/lib/email';
 
 interface SortableItemProps {
   id: string;
@@ -80,7 +80,9 @@ const Admin = () => {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [newPlayersToday, setNewPlayersToday] = useState(0);
   const [ladderPlayers, setLadderPlayers] = useState<(PickleballLadderMembership & { user: User })[]>([]);
+  const [inactiveMemberships, setInactiveMemberships] = useState<(PickleballLadderMembership & { user: User, ladder: any })[]>([]);
   const [updatingRankings, setUpdatingRankings] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -164,10 +166,25 @@ const Admin = () => {
             user:users(*)
           `)
           .eq('is_active', true)
+          .eq('active', true)
           .order('current_rank', { ascending: true });
 
         if (ladderError) throw ladderError;
         setLadderPlayers(ladderData || []);
+
+        // Fetch inactive memberships
+        const { data: inactiveData, error: inactiveError } = await supabase
+          .from('pickleball_ladder_memberships')
+          .select(`
+            *,
+            user:users(*),
+            ladder:pickleball_ladders(*)
+          `)
+          .eq('active', false)
+          .order('join_date', { ascending: false });
+
+        if (inactiveError) throw inactiveError;
+        setInactiveMemberships(inactiveData || []);
 
         // Fetch ALL players (not just active ladder members) and count their matches
         const { data: allUsersData, error: allUsersError } = await supabase
@@ -571,6 +588,38 @@ const Admin = () => {
       });
     } finally {
       setMarkingComplete(null);
+    }
+  };
+
+  const handleSendRenewalReminder = async (membershipId: string) => {
+    setSendingReminder(membershipId);
+
+    try {
+      const membership = inactiveMemberships.find(m => m.id === membershipId);
+      if (!membership) {
+        throw new Error('Membership not found');
+      }
+
+      await sendMembershipRenewalReminder(
+        membership.user.name,
+        membership.user.email,
+        membership.ladder.name
+      );
+
+      toast({
+        title: "Reminder sent successfully!",
+        description: `Renewal reminder email sent to ${membership.user.name}.`,
+      });
+
+    } catch (error: any) {
+      console.error('Error sending renewal reminder:', error);
+      toast({
+        title: "Error sending reminder",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSendingReminder(null);
     }
   };
 
@@ -1119,6 +1168,85 @@ const Admin = () => {
                     );
                   })
                 )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Inactive Memberships */}
+        <Card className="card-premium">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-6 w-6 mr-2 text-orange-600" />
+              Inactive Memberships ({inactiveMemberships.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {inactiveMemberships.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No inactive memberships
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {inactiveMemberships.map((membership) => (
+                  <div
+                    key={membership.id}
+                    className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <UserIcon className="h-4 w-4 text-orange-600" />
+                        <span className="font-medium">{membership.user.name}</span>
+                      </div>
+                      <Badge variant="outline" className="text-orange-600 border-orange-300">
+                        {membership.ladder.name}
+                      </Badge>
+                      {membership.user.email && (
+                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          <span>{membership.user.email}</span>
+                        </div>
+                      )}
+                      {membership.user.phone_number && (
+                        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          <span>{membership.user.phone_number}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-orange-600">
+                          Rank #{membership.current_rank}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Joined {new Date(membership.join_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Badge className="bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                        Expired
+                      </Badge>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSendRenewalReminder(membership.id)}
+                        disabled={sendingReminder === membership.id}
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        {sendingReminder === membership.id ? (
+                          <>
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-3 w-3 mr-1" />
+                            Send Reminder
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>

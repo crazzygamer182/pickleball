@@ -481,7 +481,7 @@ export const sendAdminJoinNotification = async (userName: string, userEmail: str
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #2563eb;">🎾 New Ladder Member</h2>
         <p>A new user has joined one of the pickleball ladders!</p>
-        
+
         <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin: 0 0 10px 0; color: #1f2937;">New Member Details</h3>
           <p style="margin: 0; color: #6b7280;">
@@ -493,7 +493,7 @@ export const sendAdminJoinNotification = async (userName: string, userEmail: str
         </div>
 
         <p>This is an automated notification. No action required.</p>
-        
+
         <p>Best regards,<br>Vancouver Pickleball Smash System</p>
       </div>
     `,
@@ -506,4 +506,71 @@ export const sendAdminJoinNotification = async (userName: string, userEmail: str
     console.error('Error sending admin join notification:', error);
     // Don't throw error to avoid affecting user experience
   }
+};
+
+export const sendMembershipRenewalReminder = async (userName: string, userEmail: string, ladderName: string) => {
+  const renewUrl = 'https://vanpickleballsmash.com/renew';
+
+  const emailData: EmailData = {
+    to: userEmail,
+    from: 'Vancouver Pickleball Smash <admin@vancouvertennisclash.com>',
+    subject: 'Renew Your Membership - Vancouver Pickleball Smash',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #dc2626;">🏓 Your Membership Needs Renewal</h2>
+        <p>Hello ${userName},</p>
+        <p>Your membership for <strong>${ladderName}</strong> has expired and needs to be renewed to continue playing matches this month.</p>
+
+        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="margin: 0 0 10px 0; color: #991b1b;">Action Required</h3>
+          <p style="margin: 0; color: #7f1d1d;">
+            <strong>Ladder:</strong> ${ladderName}<br>
+            <strong>Status:</strong> <span style="color: #dc2626; font-weight: bold;">EXPIRED</span>
+          </p>
+        </div>
+
+        <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #1e40af;">What's Next?</h3>
+          <p style="margin: 0; color: #1e40af;">
+            Renewing your membership will allow you to play matches until <strong>November 1st</strong>, which is the end of the October season.
+          </p>
+        </div>
+
+        <p>Don't miss out on the action! Renew now to continue competing in the ladder.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${renewUrl}" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Renew Membership Now
+          </a>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">
+          <strong>Renewal Link:</strong> <a href="${renewUrl}" style="color: #2563eb;">${renewUrl}</a>
+        </p>
+
+        <p>If you have any questions, please don't hesitate to reach out to us.</p>
+        <p>Best regards,<br>Vancouver Pickleball Smash Admin Team</p>
+      </div>
+    `,
+    text: `Hello ${userName},
+
+Your membership for ${ladderName} has expired and needs to be renewed to continue playing matches this month.
+
+Ladder: ${ladderName}
+Status: EXPIRED
+
+What's Next?
+Renewing your membership will allow you to play matches until November 1st, which is the end of the October season.
+
+Don't miss out on the action! Renew now to continue competing in the ladder.
+
+Renewal Link: ${renewUrl}
+
+If you have any questions, please don't hesitate to reach out to us.
+
+Best regards,
+Vancouver Pickleball Smash Admin Team`
+  };
+
+  return sendEmail(emailData);
 }; 

@@ -206,7 +206,7 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError, userEmail, userName, pa
                 <span className="text-2xl font-bold text-primary">${(finalAmount / 100).toFixed(2)}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                One-time fee for the current season (starts September 1st and ends October 1st, 2025)
+                One-time fee for the current season (starts October 1st and ends November 1st, 2025)
               </p>
             </div>
 

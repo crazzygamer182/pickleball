@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Trophy, Users, TrendingUp, Clock, MapPin, Loader2, Edit, Check, Phone, Eye, ArrowRight, Mail, Flame, User as UserIcon } from 'lucide-react';
+import { Calendar, Trophy, Users, TrendingUp, Clock, MapPin, Loader2, Edit, Check, Phone, Eye, ArrowRight, Mail, Flame, User as UserIcon, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<Array<PickleballLadderMembership & { ladder: PickleballLadder }>>([]);
+  const [inactiveMemberships, setInactiveMemberships] = useState<Array<PickleballLadderMembership & { ladder: PickleballLadder }>>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<PickleballMatchWithPlayers[]>([]);
   const [scoreEntryOpen, setScoreEntryOpen] = useState<string | null>(null);
   const [scoreData, setScoreData] = useState({ score: '', winner: '' });
@@ -103,7 +104,7 @@ const Dashboard = () => {
     if (!user) return;
     
     try {
-      // Fetch user's ladder memberships
+      // Fetch all user's ladder memberships (both active and inactive)
       const { data: membershipsData, error: membershipsError } = await supabase
         .from('pickleball_ladder_memberships')
         .select(`
@@ -114,7 +115,11 @@ const Dashboard = () => {
         .eq('is_active', true);
 
       if (membershipsError) throw membershipsError;
-      setMemberships(membershipsData || []);
+
+      // Split memberships into active and inactive
+      const allMemberships = membershipsData || [];
+      setMemberships(allMemberships.filter(m => m.active));
+      setInactiveMemberships(allMemberships.filter(m => !m.active));
 
       // Fetch user data to check location information
       const { data: userData, error: userError } = await supabase
@@ -406,6 +411,24 @@ const Dashboard = () => {
     );
   }
 
+  // Calculate days until October 1st
+  const getDaysUntilOctober1st = () => {
+    const today = new Date();
+    const october1st = new Date(today.getFullYear(), 9, 1); // Month is 0-indexed, so 9 = October
+
+    // If we're past October 1st this year, check next year
+    if (today > october1st) {
+      october1st.setFullYear(october1st.getFullYear() + 1);
+    }
+
+    const diffTime = october1st.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return { days: diffDays, isPast: today > october1st };
+  };
+
+  const { days: daysUntilExpiry, isPast: isExpired } = getDaysUntilOctober1st();
+
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -415,7 +438,32 @@ const Dashboard = () => {
           <p className="text-muted-foreground mt-2">Your pickleball ladder dashboard</p>
         </div>
 
-
+        {/* Inactive Membership Warning */}
+        {inactiveMemberships.length > 0 && (
+          <Card className="mb-8 border-red-500 bg-red-50 dark:bg-red-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 dark:text-red-100 text-lg mb-2">
+                    {isExpired
+                      ? 'Your ladder membership has expired'
+                      : `Your ladder membership is expiring in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}`}
+                  </h3>
+                  <p className="text-red-700 dark:text-red-300 mb-4">
+                    {inactiveMemberships.map(m => m.ladder.name).join(', ')}
+                  </p>
+                  <Button
+                    onClick={() => navigate('/renew')}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Renew Membership
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 1. Profile & Stats Section - First Priority */}
         <Card className="card-premium mb-8">
@@ -480,7 +528,7 @@ const Dashboard = () => {
                   <Trophy className="h-4 w-4 mr-2 text-primary" />
                   Ladder Positions
                 </h3>
-                {memberships.length === 0 ? (
+                {memberships.length === 0 && inactiveMemberships.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">You're not in any ladders yet</p>
@@ -490,6 +538,7 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    {/* Active Memberships */}
                     {memberships.map((membership) => (
                       <div key={membership.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -520,8 +569,8 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => navigate('/ladders')}
                         >
@@ -530,7 +579,38 @@ const Dashboard = () => {
                         </Button>
                       </div>
                     ))}
-                    
+
+                    {/* Inactive Memberships */}
+                    {inactiveMemberships.map((membership) => (
+                      <div key={membership.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-red-300 dark:border-red-800">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                            #{membership.current_rank || 'N/A'}
+                          </div>
+                          <div>
+                            <p className="font-semibold">{membership.ladder.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Pickleball Ladder
+                            </p>
+                            {/* Expiration Warning */}
+                            <div className="mt-1">
+                              <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                {isExpired ? 'Expired' : `Expiring in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate('/ladders')}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                    ))}
+
                     {/* Join Another Ladder Button */}
                     <div className="mt-4">
                       <Button
@@ -987,7 +1067,7 @@ const Dashboard = () => {
                     <Calendar className="h-16 w-16 text-primary mx-auto mb-4" />
                     <h4 className="text-xl font-semibold mb-2">Season Timeline</h4>
                     <p className="text-muted-foreground mb-4">
-                      Current season starts <span className="font-semibold text-primary">September 1st</span> and ends <span className="font-semibold text-primary">October 1st, 2025</span>
+                      Current season starts <span className="font-semibold text-primary">October 1st</span> and ends <span className="font-semibold text-primary">November 1st, 2025</span>
                     </p>
                     <Badge className="bg-accent/10 text-accent-foreground">
                       Events & Prizes Coming Soon

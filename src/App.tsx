@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
 import MarketPayment from "./pages/MarketPayment";
 import JoinAdditionalLadder from "./pages/JoinAdditionalLadder";
+import Renew from "./pages/Renew";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/rules" element={<Rules />} />
             <Route path="/market-payment" element={<MarketPayment />} />
             <Route path="/join-additional" element={<ProtectedRoute><JoinAdditionalLadder /></ProtectedRoute>} />
+            <Route path="/renew" element={<Renew />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
