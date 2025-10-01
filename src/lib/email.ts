@@ -514,33 +514,34 @@ export const sendMembershipRenewalReminder = async (userName: string, userEmail:
   const emailData: EmailData = {
     to: userEmail,
     from: 'Vancouver Pickleball Smash <admin@vancouvertennisclash.com>',
-    subject: 'Renew Your Membership - Vancouver Pickleball Smash',
+    subject: 'It\'s Not Too Late to Renew! - Vancouver Pickleball Smash',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #dc2626;">🏓 Your Membership Needs Renewal</h2>
+        <h2 style="color: #2563eb;">🏓 Hey! It's Not Too Late!</h2>
         <p>Hello ${userName},</p>
-        <p>Your membership for <strong>${ladderName}</strong> has expired and needs to be renewed to continue playing matches this month.</p>
-
-        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-          <h3 style="margin: 0 0 10px 0; color: #991b1b;">Action Required</h3>
-          <p style="margin: 0; color: #7f1d1d;">
-            <strong>Ladder:</strong> ${ladderName}<br>
-            <strong>Status:</strong> <span style="color: #dc2626; font-weight: bold;">EXPIRED</span>
-          </p>
-        </div>
+        <p>It's not too late to renew your membership for the <strong>October season</strong> and continue playing matches!</p>
 
         <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin: 0 0 10px 0; color: #1e40af;">What's Next?</h3>
+          <h3 style="margin: 0 0 10px 0; color: #1e40af;">Join the October Action!</h3>
           <p style="margin: 0; color: #1e40af;">
-            Renewing your membership will allow you to play matches until <strong>November 1st</strong>, which is the end of the October season.
+            Renew your membership for <strong>${ladderName}</strong> and keep playing competitive matches through the end of October. Don't miss out on the fun!
           </p>
         </div>
 
-        <p>Don't miss out on the action! Renew now to continue competing in the ladder.</p>
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #1f2937;">What You'll Get:</h3>
+          <p style="margin: 0; color: #6b7280;">
+            ✓ Continue competing in matches<br>
+            ✓ Track your progress on the ladder<br>
+            ✓ Play through the October season
+          </p>
+        </div>
+
+        <p>The October season is in full swing and there's still plenty of time to play. We'd love to have you back on the court!</p>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${renewUrl}" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-            Renew Membership Now
+          <a href="${renewUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Renew for October Season
           </a>
         </div>
 
@@ -548,25 +549,27 @@ export const sendMembershipRenewalReminder = async (userName: string, userEmail:
           <strong>Renewal Link:</strong> <a href="${renewUrl}" style="color: #2563eb;">${renewUrl}</a>
         </p>
 
-        <p>If you have any questions, please don't hesitate to reach out to us.</p>
+        <p>See you on the court!</p>
         <p>Best regards,<br>Vancouver Pickleball Smash Admin Team</p>
       </div>
     `,
-    text: `Hello ${userName},
+    text: `Hey ${userName},
 
-Your membership for ${ladderName} has expired and needs to be renewed to continue playing matches this month.
+It's not too late to renew your membership for the October season and continue playing matches!
 
-Ladder: ${ladderName}
-Status: EXPIRED
+Join the October Action!
+Renew your membership for ${ladderName} and keep playing competitive matches through the end of October. Don't miss out on the fun!
 
-What's Next?
-Renewing your membership will allow you to play matches until November 1st, which is the end of the October season.
+What You'll Get:
+✓ Continue competing in matches
+✓ Track your progress on the ladder
+✓ Play through the October season
 
-Don't miss out on the action! Renew now to continue competing in the ladder.
+The October season is in full swing and there's still plenty of time to play. We'd love to have you back on the court!
 
 Renewal Link: ${renewUrl}
 
-If you have any questions, please don't hesitate to reach out to us.
+See you on the court!
 
 Best regards,
 Vancouver Pickleball Smash Admin Team`
