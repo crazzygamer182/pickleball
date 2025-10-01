@@ -35,32 +35,50 @@ function SortableItem({ id, player, rank }: SortableItemProps) {
     transition,
   };
 
+  const isInactive = !player.active;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center justify-between p-3 bg-muted/20 rounded border cursor-move hover:bg-muted/40 transition-colors"
+      className={`flex items-center justify-between p-3 rounded border cursor-move hover:bg-muted/40 transition-colors ${
+        isInactive
+          ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
+          : 'bg-muted/20'
+      }`}
       {...attributes}
       {...listeners}
     >
       <div className="flex items-center space-x-3">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
+        <GripVertical className={`h-4 w-4 ${isInactive ? 'text-red-400' : 'text-muted-foreground'}`} />
         <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="w-8 h-6 flex items-center justify-center text-xs">
+          <Badge
+            variant="outline"
+            className={`w-8 h-6 flex items-center justify-center text-xs ${
+              isInactive ? 'border-red-400 text-red-600 dark:text-red-400' : ''
+            }`}
+          >
             #{rank}
           </Badge>
-          <span className="font-medium">{player.user.name}</span>
+          <span className={`font-medium ${isInactive ? 'text-red-600 dark:text-red-400' : ''}`}>
+            {player.user.name}
+          </span>
+          {isInactive && (
+            <Badge className="bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-xs">
+              Inactive
+            </Badge>
+          )}
         </div>
       </div>
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-1">
-          <Trophy className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold text-primary">
+          <Trophy className={`h-4 w-4 ${isInactive ? 'text-red-400' : 'text-primary'}`} />
+          <span className={`text-sm font-semibold ${isInactive ? 'text-red-600 dark:text-red-400' : 'text-primary'}`}>
             {player.score || 100}
           </span>
         </div>
         {player.winning_streak > 0 && (
-          <Badge className="bg-orange-100 text-orange-600 text-xs">
+          <Badge className={isInactive ? 'bg-red-100 text-red-600 text-xs' : 'bg-orange-100 text-orange-600 text-xs'}>
             {player.winning_streak} wins
           </Badge>
         )}
@@ -158,7 +176,7 @@ const Admin = () => {
         setTotalPlayers((allPlayersData || []).length);
         setNewPlayersToday(newToday);
 
-        // Fetch ladder rankings
+        // Fetch ladder rankings - show ALL players (active and inactive)
         const { data: ladderData, error: ladderError } = await supabase
           .from('pickleball_ladder_memberships')
           .select(`
@@ -166,7 +184,6 @@ const Admin = () => {
             user:users(*)
           `)
           .eq('is_active', true)
-          .eq('active', true)
           .order('current_rank', { ascending: true });
 
         if (ladderError) throw ladderError;

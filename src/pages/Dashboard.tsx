@@ -414,17 +414,22 @@ const Dashboard = () => {
   // Calculate days until October 1st
   const getDaysUntilOctober1st = () => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
     const october1st = new Date(today.getFullYear(), 9, 1); // Month is 0-indexed, so 9 = October
+    october1st.setHours(0, 0, 0, 0);
 
-    // If we're past October 1st this year, check next year
-    if (today > october1st) {
+    // If we're on or past October 1st this year, membership is expired
+    const isExpired = today >= october1st;
+
+    // Calculate days until next October 1st (for next year's renewal)
+    if (isExpired) {
       october1st.setFullYear(october1st.getFullYear() + 1);
     }
 
     const diffTime = october1st.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return { days: diffDays, isPast: today > october1st };
+    return { days: diffDays, isPast: isExpired };
   };
 
   const { days: daysUntilExpiry, isPast: isExpired } = getDaysUntilOctober1st();
